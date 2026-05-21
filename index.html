@@ -1,0 +1,841 @@
+const JSONBIN_KEY = "$2a$10$BQ0.7CNAbAI.SFIte.7gZ.l6hj/S7MJjn5cgkMReo.KboG3ra1ilS";
+const JSONBIN_ID  = "6a0f2538ee5a733b12f870e6";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RLS Station Daily Status Register — DHM 2026</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, sans-serif; font-size: 13px; background: #e8edf3; padding: 16px; }
+select, input, button { font-family: Arial, sans-serif; }
+
+#app { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.12); }
+
+/* HEADER */
+.header { background: #1a3558; color: #fff; padding: 12px 16px; }
+.header-title { font-size: 14px; font-weight: bold; margin-bottom: 10px; }
+.header-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ctrl { display: flex; align-items: center; gap: 5px; }
+.ctrl-lbl { font-size: 11px; opacity: 0.7; white-space: nowrap; }
+.hdr-sel { font-size: 12px; padding: 4px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.12); color: #fff; cursor: pointer; }
+.hdr-sel option { color: #000; background: #fff; }
+.hdr-btn { font-size: 11px; padding: 4px 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: #fff; cursor: pointer; white-space: nowrap; }
+.hdr-btn:hover { background: rgba(255,255,255,0.2); }
+.hdr-btn-red { border-color: rgba(255,150,150,0.4); background: rgba(200,40,40,0.2); }
+.hdr-btn-red:hover { background: rgba(200,40,40,0.35); }
+.hdr-btn-active { background: rgba(255,255,255,0.22); font-weight: bold; }
+.manage-btn { margin-left: auto; font-size: 11px; padding: 5px 12px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.35); background: rgba(255,255,255,0.1); color: #fff; cursor: pointer; white-space: nowrap; }
+.manage-btn:hover, .manage-btn.active { background: rgba(255,255,255,0.22); }
+
+.sub-panel { margin-top: 10px; background: rgba(0,0,0,0.22); border-radius: 6px; padding: 10px 12px; }
+.sub-panel-row { display: flex; gap: 8px; align-items: center; }
+.sub-panel input { flex: 1; font-size: 12px; padding: 5px 8px; border-radius: 4px; border: none; background: rgba(255,255,255,0.92); color: #000; outline: none; }
+.btn-add { padding: 5px 14px; background: #2563eb; border: none; color: #fff; border-radius: 4px; font-size: 12px; cursor: pointer; }
+.btn-add:hover { background: #1d4ed8; }
+.btn-x { padding: 5px 9px; background: rgba(255,255,255,0.15); border: none; color: #fff; border-radius: 4px; font-size: 12px; cursor: pointer; }
+
+.del-panel { margin-top: 10px; background: rgba(0,0,0,0.22); border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,120,120,0.3); }
+.del-panel-info { font-size: 11px; padding: 8px 12px; opacity: 0.7; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.del-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.del-row-name { font-size: 12px; }
+.del-row-name.current { opacity: 0.6; font-style: italic; }
+.btn-del-off { font-size: 11px; padding: 3px 10px; border-radius: 4px; border: 1px solid rgba(255,120,120,0.5); background: rgba(200,40,40,0.25); color: #fca5a5; cursor: pointer; }
+.btn-del-off:hover { background: rgba(200,40,40,0.45); }
+.protected-lbl { font-size: 10px; opacity: 0.45; font-style: italic; }
+
+/* TOAST */
+.toast { padding: 8px 14px; border-radius: 6px; font-size: 12px; margin-bottom: 8px; font-weight: bold; }
+.toast-ok { background: #f0fdf4; border: 1px solid #86efac; color: #15803d; }
+.toast-err { background: #fef2f2; border: 1px solid #fca5a5; color: #dc2626; }
+
+/* LEGEND */
+.legend { display: flex; flex-wrap: wrap; gap: 14px; padding: 6px 14px; background: #edf2f7; border-bottom: 1px solid #d1dce8; align-items: center; }
+.leg-item { display: flex; align-items: center; gap: 4px; font-size: 11px; }
+.leg-code { font-weight: bold; font-size: 12px; }
+.leg-hint { margin-left: auto; font-size: 10px; color: #94a3b8; font-style: italic; }
+
+/* MANAGE PANEL */
+.manage-panel { background: #f8fafc; border-bottom: 1px solid #d1dce8; padding: 14px 16px; }
+.manage-title { font-weight: bold; font-size: 13px; color: #1a3558; margin-bottom: 12px; }
+.manage-title .off { color: #2563eb; }
+.manage-title .sub { color: #7c3aed; }
+.stn-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; background: #fff; padding: 10px 12px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 12px; }
+.fld { display: flex; flex-direction: column; gap: 3px; }
+.fld label { font-size: 10px; color: #64748b; }
+.fld input, .fld select { font-size: 12px; padding: 5px 8px; border-radius: 4px; border: 1px solid #d1d5db; background: #fff; color: #000; outline: none; }
+.fld-grow { flex: 1; min-width: 180px; }
+.fld-grow input { width: 100%; }
+.btn-stn-add { padding: 6px 14px; background: #1a3558; color: #fff; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold; align-self: flex-end; height: 31px; }
+.btn-stn-add:hover { background: #2b4d7c; }
+.stn-list { max-height: 200px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px; }
+.stn-list table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.stn-list thead th { background: #dce7f0; padding: 5px 8px; font-weight: bold; color: #1a3558; border-bottom: 1px solid #c4d4e3; font-size: 11px; position: sticky; top: 0; z-index: 1; }
+.stn-list tbody td { padding: 4px 8px; border-bottom: 1px solid #f1f5f9; font-size: 12px; }
+.stn-list tbody tr:nth-child(even) td { background: #f8fafc; }
+.btn-rm { font-size: 11px; color: #dc2626; background: none; border: none; cursor: pointer; padding: 2px 6px; }
+.empty-note { color: #94a3b8; font-size: 12px; font-style: italic; padding: 8px 0; }
+
+/* STATUS TABLE */
+.tbl-wrap { overflow-x: auto; }
+table.status { border-collapse: collapse; font-size: 11px; }
+table.status th { background: #2b4d7c; color: #fff; padding: 5px 4px; text-align: center; font-size: 11px; border-right: 1px solid rgba(255,255,255,0.15); white-space: nowrap; vertical-align: middle; }
+table.status th.dark { background: #1a3558; }
+table.status th.tleft { text-align: left; padding-left: 8px; }
+table.status th.dim { opacity: 0.25; }
+table.status td { padding: 3px 4px; border-right: 1px solid #e2e8f0; font-size: 11px; vertical-align: middle; }
+table.status tbody tr:nth-child(even) td { background: #f8fafc; }
+table.status td.day { text-align: center; padding: 0; cursor: pointer; user-select: none; width: 26px; height: 22px; font-weight: bold; font-size: 11px; }
+table.status td.day:hover { filter: brightness(0.88); }
+table.status td.grayed { background: #f1f5f9; }
+table.status td.active-days { text-align: center; font-weight: bold; color: #15803d; background: #f0fdf4; }
+table.status td.inactive-days { text-align: center; font-weight: bold; color: #dc2626; background: #fef2f2; }
+table.status td.remarks { padding-left: 6px; color: #94a3b8; }
+table.status tfoot tr td { background: #f8fafc; font-size: 11px; }
+table.status tfoot tr.total td { background: #dce7f0; border-top: 2px solid #2b4d7c; }
+table.status tfoot td.flbl { text-align: right; padding: 4px 10px; font-weight: bold; border-right: 1px solid #e2e8f0; }
+table.status td.no-stn { padding: 30px; text-align: center; color: #94a3b8; font-style: italic; }
+
+/* FOOTER */
+.footer { padding: 6px 14px; background: #edf2f7; border-top: 1px solid #d1dce8; font-size: 10px; color: #94a3b8; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px; }
+.dev-footer { padding: 5px 14px; background: #1a3558; color: rgba(255,255,255,0.45); font-size: 10px; text-align: right; letter-spacing: 0.03em; border-radius: 0 0 8px 8px; }
+
+/* TABS */
+.tabs { display: flex; background: #162d48; border-bottom: 2px solid #2b4d7c; }
+.tab { padding: 8px 20px; font-size: 12px; color: rgba(255,255,255,0.55); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap; }
+.tab:hover { color: rgba(255,255,255,0.85); }
+.tab.active { color: #fff; font-weight: bold; border-bottom: 2px solid #60a5fa; }
+
+/* SUMMARY */
+.summary-wrap { padding: 12px 14px; }
+.summary-info { font-size: 11px; color: #64748b; margin-bottom: 10px; }
+.sum-tbl-wrap { overflow-x: auto; border: 1px solid #d1dce8; border-radius: 6px; }
+table.sum { border-collapse: collapse; font-size: 11px; }
+table.sum th { background: #2b4d7c; color: #fff; padding: 4px 4px; text-align: center; font-size: 11px; border-right: 1px solid rgba(255,255,255,0.15); white-space: nowrap; vertical-align: middle; }
+table.sum th.tleft { text-align: left; padding-left: 6px; }
+table.sum td { padding: 2px 3px; border-right: 1px solid #e8edf3; font-size: 11px; vertical-align: middle; }
+table.sum tbody tr:nth-child(even) td.sticky-col { background: #f8fafc; }
+table.sum tbody tr:hover td.sticky-col { background: #eff6ff; }
+table.sum td.sticky-col { position: sticky; background: #fff; z-index: 1; border-right: 1px solid #d1dce8; }
+table.sum td.sticky-col.name-col { border-right: 2px solid #c4d4e3; }
+table.sum th.sticky-th { position: sticky; z-index: 3; }
+table.sum tfoot tr td { background: #dce7f0; border-top: 2px solid #2b4d7c; font-size: 11px; }
+table.sum tfoot td.sticky-col { background: #dce7f0; z-index: 1; }
+table.sum td.tick { width: 15px; height: 19px; padding: 0; text-align: center; border-right: 1px solid rgba(210,220,230,0.5); font-size: 9px; font-weight: bold; cursor: default; }
+table.sum td.ann-cnt { width: 28px; text-align: center; font-size: 11px; font-weight: bold; padding: 2px 3px; }
+table.sum td.rmk-cell { min-width: 130px; padding: 2px 4px; }
+table.sum input.rmk-inp { width: 100%; font-size: 11px; padding: 2px 5px; border: 1px solid #e2e8f0; border-radius: 3px; background: #fafafa; outline: none; font-family: Arial,sans-serif; }
+table.sum input.rmk-inp:focus { border-color: #93c5fd; background: #fff; }
+.no-data-msg { padding: 30px; text-align: center; color: #94a3b8; font-style: italic; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+<div id="app"></div>
+
+<script>
+const CUR_YEAR = new Date().getFullYear();
+const YEARS = (function(){ var a=[]; for(var y=2020;y<=CUR_YEAR+5;y++) a.push(y); return a; })();
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const SUBTYPES = ["Hydrological Stations","Snow Stations"];
+const TYPES = ["Manual+Automatic","Manual","Automatic"];
+const MEDIUMS = ["GSM","VSAT","Radio","Satellite","N/A"];
+const S_OPTS = ["","A","I","D","F","-"];
+const S_CLR = {A:"#15803d",I:"#dc2626",D:"#7c3aed",F:"#c2410c","-":"#6b7280"};
+const S_BG  = {A:"#f0fdf4",I:"#fef2f2",D:"#faf5ff",F:"#fff7ed","-":"#f9fafb"};
+
+const DEF_HYDRO = [
+  {id:"dh1",no:"610",name:"Bhote Koshi at Barhbise",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh2",no:"620",name:"Balephi Khola at Jalbire",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh3",no:"625",name:"Sunkoshi River at Dolalghat",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh4",no:"627.5",name:"Melamchi Khola at Helambu",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh5",no:"629.1",name:"Indrawati at Dolalghat",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh6",no:"630",name:"Sunkoshi River at Pachuwarghat",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh7",no:"683.5",name:"Mewa Khola at Taplejung",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh8",no:"699",name:"Lohandra Khola at Shisbeni",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh9",no:"684",name:"Tamor River at Majhitar",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh10",no:"606",name:"Arun River at Simle",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh11",no:"600.1",name:"Arun River at Uwa Goan",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh12",no:"602.5",name:"Hinwa Khola at Pipletar",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh13",no:"681",name:"Sunkoshi River at Hampachuwar",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh14",no:"690",name:"Tamur River at Mulghat",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh15",no:"691",name:"Tamur River at Triveni",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh16",no:"695",name:"Saptakoshi River at Chatara",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh17",no:"602",name:"Sabhaya Khola at Tumlingtar",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh18",no:"604.5",name:"Arun River at Turkeghat",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh19",no:"668.5",name:"Solu Khola at Salme",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh20",no:"683",name:"Tamor River at Taplejung",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh21",no:"683.6",name:"Kabeli Khola at Taplejung",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh22",no:"730",name:"Puwa Khola at Sajbate",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh23",no:"732",name:"Maikhola at Chisapani",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh24",no:"738",name:"Deumai Khola at Aangdang",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh25",no:"795",name:"Kankai River at Mainachuli",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh26",no:"799",name:"Kankai River at Kumarkhod",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh27",no:"728",name:"Maikhola at Rajdwali",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh28",no:"600.05",name:"Barun River at Syaksila",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh29",no:"647",name:"Tamakoshi at Busti",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh30",no:"650",name:"Khimti Khola at Rasnalu",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh31",no:"652",name:"Sunkoshi River at Khurkot",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh32",no:"660",name:"Likhu Khola at Sangutar",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh33",no:"665",name:"Sunkosi at Tokshelghat",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh34",no:"670",name:"Dudhkoshi River at Rabuwa Bazar",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh35",no:"680",name:"Sunkoshi River at Kampughat",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh36",no:"669.5",name:"Rawa Khola at Gaikhure",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh37",no:"600.02",name:"Arun River at Kimathanka",type:"Manual+Automatic",medium:"GSM"},
+];
+
+// ── helpers ──
+function sk(s) { return s.replace(/[^a-zA-Z0-9]/g,"_"); }
+function dim(m) { return new Date(S.year, MONTHS.indexOf(m)+1, 0).getDate(); }
+function SK(o,s) { return "rls_stn_"+sk(o)+"_"+sk(s); }
+function TK(o,s,m) { return "rls_st_"+sk(o)+"_"+sk(s)+"_"+S.year+"_"+sk(m); }
+function lGet(k) { try { var v=localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch(e) { return null; } }
+function lSet(k,v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} }
+function lDel(k) { try { localStorage.removeItem(k); } catch(e) {} }
+
+// ── state ──
+var S = {
+  offices: lGet("rls_offices") || ["DHM","OHM Dharan"],
+  office: "DHM",
+  subtype: "Hydrological Stations",
+  month: "March",
+  year: lGet("rls_year") || CUR_YEAR,
+  stns: {},      // SK(o,s) -> array
+  status: {},    // TK(o,s,m) -> {stnId: {day: code}}
+  showManage: false,
+  showAddOff: false,
+  showDelOff: false,
+  view: "status",
+  newOff: "",
+  newNo: "", newName: "", newType: "Manual+Automatic", newMed: "GSM"
+};
+
+function initStns() {
+  S.offices.forEach(function(o) {
+    SUBTYPES.forEach(function(s) {
+      var k = SK(o,s);
+      if (S.stns[k] === undefined) {
+        var saved = lGet(k);
+        S.stns[k] = saved ? saved : (o==="DHM" && s==="Hydrological Stations" ? JSON.parse(JSON.stringify(DEF_HYDRO)) : []);
+      }
+    });
+  });
+}
+
+function loadStatus() {
+  var k = TK(S.office, S.subtype, S.month);
+  if (S.status[k] === undefined) {
+    S.status[k] = lGet(k) || {};
+  }
+}
+
+var toastTimer = null;
+function flash(msg, err) {
+  var t = document.getElementById("toast");
+  t.innerHTML = '<div class="toast '+(err?"toast-err":"toast-ok")+'">'+(err?"":"✓ ")+msg+'</div>';
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.innerHTML=""; }, 2500);
+}
+
+function cycleStatus(stnId, day) {
+  var k = TK(S.office, S.subtype, S.month);
+  if (!S.status[k]) S.status[k] = {};
+  if (!S.status[k][stnId]) S.status[k][stnId] = {};
+  var cur = S.status[k][stnId][day] || "";
+  var idx = S_OPTS.indexOf(cur);
+  var next = S_OPTS[(idx+1) % S_OPTS.length];
+  S.status[k][stnId][day] = next;
+  lSet(k, S.status[k]);
+  render();
+}
+
+function addStation() {
+  var no = S.newNo.trim(), name = S.newName.trim();
+  if (!no || !name) { flash("Enter station number and name", true); return; }
+  var k = SK(S.office, S.subtype);
+  var stn = { id: "s"+Date.now(), no: no, name: name, type: S.newType, medium: S.newMed };
+  S.stns[k] = (S.stns[k] || []).concat([stn]);
+  lSet(k, S.stns[k]);
+  S.newNo = ""; S.newName = "";
+  flash('Station "'+name+'" saved');
+  render();
+}
+
+function deleteStation(id) {
+  var k = SK(S.office, S.subtype);
+  S.stns[k] = (S.stns[k] || []).filter(function(s){ return s.id !== id; });
+  lSet(k, S.stns[k]);
+  flash("Station removed");
+  render();
+}
+
+function addOffice() {
+  var name = S.newOff.trim();
+  if (!name) return;
+  if (S.offices.indexOf(name) >= 0) { flash("Office already exists", true); return; }
+  S.offices.push(name);
+  lSet("rls_offices", S.offices);
+  SUBTYPES.forEach(function(s){ S.stns[SK(name,s)] = []; });
+  S.office = name;
+  S.newOff = ""; S.showAddOff = false; S.showDelOff = false;
+  flash('Office "'+name+'" added');
+  render();
+}
+
+function deleteOffice(name) {
+  if (name === "DHM") { flash("Cannot delete the default DHM office", true); return; }
+  if (!confirm('Delete office "'+name+'"?\nAll its stations and status data will be removed.')) return;
+  SUBTYPES.forEach(function(s) {
+    lDel(SK(name,s));
+    delete S.stns[SK(name,s)];
+    MONTHS.forEach(function(m){ lDel(TK(name,s,m)); });
+  });
+  S.offices = S.offices.filter(function(o){ return o !== name; });
+  lSet("rls_offices", S.offices);
+  if (S.office === name) S.office = S.offices[0];
+  S.showDelOff = false;
+  flash('Office "'+name+'" deleted');
+  render();
+}
+
+function getStnStats(id) {
+  var k = TK(S.office, S.subtype, S.month);
+  var st = (S.status[k] && S.status[k][id]) || {};
+  var days = dim(S.month);
+  var r = {A:0,I:0,D:0,F:0};
+  for (var d=1; d<=days; d++) { var v=st[d]||""; if(r[v]!==undefined) r[v]++; }
+  return r;
+}
+
+function getDayTotals(day) {
+  var k = TK(S.office, S.subtype, S.month);
+  var stns = S.stns[SK(S.office, S.subtype)] || [];
+  var r = {A:0,I:0,D:0,F:0,"-":0};
+  stns.forEach(function(stn) {
+    var v = (S.status[k] && S.status[k][stn.id] && S.status[k][stn.id][day]) || "";
+    if (r[v] !== undefined) r[v]++;
+  });
+  return r;
+}
+
+// ── DOM builder ──
+function el(tag, attrs, children) {
+  var elem = document.createElement(tag);
+  if (attrs) {
+    Object.keys(attrs).forEach(function(k) {
+      if (k === "cls") { elem.className = attrs[k]; }
+      else if (k === "style") { elem.style.cssText = attrs[k]; }
+      else if (k === "onclick") { elem.onclick = attrs[k]; }
+      else if (k === "onchange") { elem.onchange = attrs[k]; }
+      else if (k === "oninput") { elem.oninput = attrs[k]; }
+      else if (k === "onkeydown") { elem.onkeydown = attrs[k]; }
+      else { elem.setAttribute(k, attrs[k]); }
+    });
+  }
+  if (children) {
+    children.forEach(function(c) {
+      if (c === null || c === undefined) return;
+      if (typeof c === "string") elem.appendChild(document.createTextNode(c));
+      else elem.appendChild(c);
+    });
+  }
+  return elem;
+}
+
+function txt(s) { return document.createTextNode(s); }
+
+function mkSel(opts, val, cls, onchange) {
+  var s = el("select", {cls: cls, onchange: onchange});
+  opts.forEach(function(o) {
+    var op = el("option", {value: o}, [o]);
+    if (o === val) op.selected = true;
+    s.appendChild(op);
+  });
+  return s;
+}
+
+function renderSummary(app) {
+  var stns = S.stns[SK(S.office, S.subtype)] || [];
+
+  // Load all months
+  MONTHS.forEach(function(m) {
+    var k = TK(S.office, S.subtype, m);
+    if (S.status[k] === undefined) S.status[k] = lGet(k) || {};
+  });
+
+  function rmkKey(id) { return "rls_rmk_"+sk(S.office)+"_"+sk(S.subtype)+"_"+id; }
+
+  var wrap = el("div", {cls:"summary-wrap"});
+  wrap.appendChild(el("div",{cls:"summary-info"},[
+    "Annual summary — ", el("b",{},[S.office]), " / ", el("b",{},[S.subtype]),
+    " · "+S.year+" · Click any day cell to edit status · Remarks auto-saved"
+  ]));
+
+  if (stns.length === 0) {
+    wrap.appendChild(el("div",{cls:"no-data-msg"},["No stations. Go to Daily Status tab and add stations first."]));
+    app.appendChild(wrap); return;
+  }
+
+  var tbl = el("table",{cls:"sum"});
+
+  // ── HEADER ROW 1: Month names spanning day columns ──
+  var hr1 = el("tr");
+  hr1.appendChild(el("th",{cls:"tleft sticky-th",style:"width:26px;left:0;background:#2b4d7c"},["#"]));
+  hr1.appendChild(el("th",{cls:"tleft sticky-th",style:"width:50px;left:26px;background:#2b4d7c"},["No."]));
+  hr1.appendChild(el("th",{cls:"tleft sticky-th",style:"min-width:140px;left:76px;background:#2b4d7c"},["Name / River"]));
+  MONTHS.forEach(function(m) {
+    var d = dim(m);
+    var th = el("th",{colspan:String(d),style:"background:#1e3d6a;padding:4px 6px;border-right:2px solid rgba(255,255,255,0.25)"},[m+" ("+d+"d)"]);
+    hr1.appendChild(th);
+  });
+  hr1.appendChild(el("th",{colspan:"5",style:"background:#122844;border-left:2px solid rgba(255,255,255,0.2)"},["Annual Count"]));
+  hr1.appendChild(el("th",{style:"background:#162d48;text-align:left;padding-left:6px;min-width:130px"},["Remarks"]));
+
+  // ── HEADER ROW 2: Day numbers 1-N under each month ──
+  var hr2 = el("tr",{style:"background:#253f62"});
+  var fixSt = "background:#253f62;font-size:9px;padding:2px 2px;border-bottom:1px solid rgba(255,255,255,0.15);";
+  hr2.appendChild(el("th",{cls:"sticky-th",style:"left:0;"+fixSt},[""]));
+  hr2.appendChild(el("th",{cls:"sticky-th",style:"left:26px;"+fixSt},[""]));
+  hr2.appendChild(el("th",{cls:"sticky-th",style:"left:76px;border-right:2px solid rgba(255,255,255,0.3);"+fixSt},[""]));
+  MONTHS.forEach(function(m) {
+    var d = dim(m);
+    for (var day=1; day<=d; day++) {
+      var isLast = day === d;
+      hr2.appendChild(el("th",{style:"width:15px;padding:2px 1px;font-size:9px;font-weight:normal;"+(isLast?"border-right:2px solid rgba(255,255,255,0.25);":"")},[String(day)]));
+    }
+  });
+  [["A","#4ade80"],["I","#f87171"],["D","#c084fc"],["F","#fb923c"],["-","#94a3b8"]].forEach(function(p){
+    hr2.appendChild(el("th",{style:"width:28px;font-size:10px;font-weight:bold;color:"+p[1]+";background:#1a3558;padding:2px 3px;border-left:1px solid rgba(255,255,255,0.1)"},[p[0]]));
+  });
+  hr2.appendChild(el("th",{style:"background:#162d48;border-left:2px solid rgba(255,255,255,0.2)"},[""]));
+
+  tbl.appendChild(el("thead",{},[hr1,hr2]));
+
+  // ── BODY ──
+  var tbody = el("tbody");
+  stns.forEach(function(stn, idx) {
+    var tr = el("tr");
+    var bg = idx%2===0 ? "#fff" : "#f8fafc";
+
+    tr.appendChild(el("td",{cls:"sticky-col",style:"left:0;text-align:center;color:#94a3b8;font-size:11px;background:"+bg},[String(idx+1)]));
+    tr.appendChild(el("td",{cls:"sticky-col",style:"left:26px;text-align:center;font-family:monospace;font-size:11px;padding:3px 4px;background:"+bg},[stn.no]));
+    var nameTd = el("td",{cls:"sticky-col name-col",style:"left:76px;font-size:11px;white-space:nowrap;overflow:hidden;max-width:140px;padding:3px 6px;background:"+bg});
+    nameTd.title = stn.name; nameTd.textContent = stn.name;
+    tr.appendChild(nameTd);
+
+    var annual = {A:0,I:0,D:0,F:0,"-":0};
+
+    MONTHS.forEach(function(m) {
+      var k = TK(S.office, S.subtype, m);
+      var stnSt = (S.status[k] && S.status[k][stn.id]) || {};
+      var d = dim(m);
+      for (var day=1; day<=d; day++) {
+        var v = stnSt[day] || "";
+        var isLast = day === d;
+        var td = el("td",{cls:"tick"});
+        td.style.borderRight = isLast ? "2px solid #c4d4e3" : "1px solid rgba(210,220,230,0.5)";
+        if (v) {
+          td.style.background = S_BG[v];
+          td.style.color = S_CLR[v];
+          td.textContent = v;
+          if (annual[v] !== undefined) annual[v]++;
+        }
+        td.title = m+" Day "+day+(v?" : "+v:" : empty");
+        // Click to cycle (navigates to that month in Daily Status)
+        (function(month){ td.onclick = function(){ S.month=month; S.view="status"; render(); }; })(m);
+        td.style.cursor = "pointer";
+        tr.appendChild(td);
+      }
+    });
+
+    // Annual counts A I D F -
+    [["A","#15803d","#f0fdf4"],["I","#dc2626","#fef2f2"],["D","#7c3aed",""],["F","#c2410c",""],["–","-","#6b7280",""]].forEach(function(p) {
+      var code = p[0]==="–" ? "-" : p[0];
+      var clr = p[1]; var bgc = p[2]||"";
+      var cnt = annual[code]||0;
+      var td = el("td",{cls:"ann-cnt"});
+      if (bgc) td.style.background = bgc;
+      td.style.color = cnt>0 ? clr : "#d1d5db";
+      td.style.borderLeft = p[0]==="A" ? "2px solid #c4d4e3" : "";
+      td.textContent = cnt>0 ? String(cnt) : "";
+      tr.appendChild(td);
+    });
+
+    // Remarks
+    var savedRmk = lGet(rmkKey(stn.id)) || "";
+    var rmkInp = el("input",{type:"text",cls:"rmk-inp",placeholder:"remarks..."});
+    rmkInp.value = savedRmk;
+    (function(id){ rmkInp.onchange = function(){ lSet(rmkKey(id), this.value); flash("Remark saved"); }; })(stn.id);
+    var rmkTd = el("td",{cls:"rmk-cell",style:"border-left:2px solid #c4d4e3"},[rmkInp]);
+    tr.appendChild(rmkTd);
+
+    tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody);
+
+  // ── FOOTER: per-day totals ──
+  var tfoot = el("tfoot");
+  var fRow = el("tr");
+  var fBase = "font-weight:bold;color:#1a3558;padding:4px 6px;font-size:10px;";
+  var fSticky = fBase+"position:sticky;z-index:1;background:#dce7f0;";
+  fRow.appendChild(el("td",{cls:"sticky-col",style:"left:0;"+fSticky},[""]));
+  fRow.appendChild(el("td",{cls:"sticky-col",style:"left:26px;"+fSticky},[""]));
+  var lblTd = el("td",{cls:"sticky-col name-col",style:"left:76px;text-align:right;"+fSticky},["Monthly Total"]);
+  fRow.appendChild(lblTd);
+
+  MONTHS.forEach(function(m) {
+    var k = TK(S.office, S.subtype, m);
+    var d = dim(m);
+    for (var day=1; day<=d; day++) {
+      var counts = {A:0,I:0,D:0,F:0,"-":0};
+      stns.forEach(function(stn){
+        var v=(S.status[k]&&S.status[k][stn.id]&&S.status[k][stn.id][day])||"";
+        if(counts[v]!==undefined) counts[v]++;
+      });
+      var isLast = day===d;
+      var td = el("td",{cls:"tick"});
+      td.style.borderRight = isLast ? "2px solid #c4d4e3" : "1px solid rgba(210,220,230,0.5)";
+      td.style.background = "#dce7f0";
+      td.title = m+" Day "+day+" — A:"+counts.A+" I:"+counts.I+" D:"+counts.D+" F:"+counts.F;
+      var total = counts.A+counts.I+counts.D+counts.F+counts["-"];
+      if (total > 0) {
+        var dom="A", max=0;
+        ["A","I","D","F","-"].forEach(function(c){ if(counts[c]>max){max=counts[c];dom=c;} });
+        td.style.background = S_BG[dom];
+        td.style.color = S_CLR[dom];
+        td.style.fontWeight = "bold";
+        td.textContent = String(max);
+      }
+      fRow.appendChild(td);
+    }
+  });
+
+  // Annual total counts in footer
+  var grandTotal = {A:0,I:0,D:0,F:0,"-":0};
+  MONTHS.forEach(function(m){
+    var k=TK(S.office,S.subtype,m); var d=dim(m);
+    stns.forEach(function(stn){
+      for(var day=1;day<=d;day++){
+        var v=(S.status[k]&&S.status[k][stn.id]&&S.status[k][stn.id][day])||"";
+        if(grandTotal[v]!==undefined) grandTotal[v]++;
+      }
+    });
+  });
+  [["A","#15803d","#f0fdf4"],["I","#dc2626","#fef2f2"],["D","#7c3aed",""],["F","#c2410c",""],["–","-","#6b7280",""]].forEach(function(p){
+    var code=p[0]==="–"?"-":p[0]; var clr=p[1]; var bgc=p[2]||"#dce7f0";
+    var cnt=grandTotal[code]||0;
+    var td=el("td",{cls:"ann-cnt"});
+    td.style.background=bgc||"#dce7f0";
+    td.style.color=cnt>0?clr:"#94a3b8";
+    td.style.fontWeight="bold";
+    td.style.borderLeft=code==="A"?"2px solid #c4d4e3":"";
+    td.textContent=cnt>0?String(cnt):"0";
+    fRow.appendChild(td);
+  });
+  fRow.appendChild(el("td",{style:"background:#dce7f0;border-left:2px solid #c4d4e3"}));
+  tfoot.appendChild(fRow);
+  tbl.appendChild(tfoot);
+
+  wrap.appendChild(el("div",{cls:"sum-tbl-wrap"},[tbl]));
+  app.appendChild(wrap);
+}
+
+// ── RENDER ──
+function render() {
+  initStns();
+  loadStatus();
+
+  var stns = S.stns[SK(S.office, S.subtype)] || [];
+  var curK = TK(S.office, S.subtype, S.month);
+  var curSt = S.status[curK] || {};
+  var days = dim(S.month);
+
+  var app = document.getElementById("app");
+  app.innerHTML = "";
+
+  // ── HEADER ──
+  var offSel = mkSel(S.offices, S.office, "hdr-sel", function(){ S.office=this.value; render(); });
+  var subSel = mkSel(SUBTYPES, S.subtype, "hdr-sel", function(){ S.subtype=this.value; render(); });
+  var monSel = mkSel(MONTHS, S.month, "hdr-sel", function(){ S.month=this.value; render(); });
+
+  var addOffBtn = el("button", {
+    cls: "hdr-btn"+(S.showAddOff?" hdr-btn-active":""),
+    onclick: function(){ S.showAddOff=!S.showAddOff; S.showDelOff=false; render(); }
+  }, ["+ Add Office"]);
+
+  var delOffBtn = el("button", {
+    cls: "hdr-btn hdr-btn-red"+(S.showDelOff?" hdr-btn-active":""),
+    onclick: function(){ S.showDelOff=!S.showDelOff; S.showAddOff=false; render(); }
+  }, ["🗑 Delete Office"]);
+
+  var manBtn = el("button", {
+    cls: "manage-btn"+(S.showManage?" active":""),
+    onclick: function(){ S.showManage=!S.showManage; render(); }
+  }, ["⚙ Manage Stations ("+stns.length+")"]);
+
+  var headerChildren = [
+    el("div", {cls:"header-title"}, ["DHM RLS Station Daily Status Register"]),
+    el("div", {cls:"header-row"}, [
+      el("div", {cls:"ctrl"}, [el("span",{cls:"ctrl-lbl"},["Year:"]),
+        mkSel(YEARS.map(String), String(S.year), "hdr-sel", function(){ S.year=parseInt(this.value); S.status={}; lSet("rls_year",S.year); render(); })
+      ]),
+      el("div", {cls:"ctrl"}, [el("span",{cls:"ctrl-lbl"},["Office:"]), offSel, addOffBtn, delOffBtn]),
+      el("div", {cls:"ctrl"}, [el("span",{cls:"ctrl-lbl"},["Sub-type:"]), subSel]),
+      el("div", {cls:"ctrl"}, [el("span",{cls:"ctrl-lbl"},["Month:"]), monSel]),
+      manBtn
+    ])
+  ];
+
+  // Add Office panel
+  if (S.showAddOff) {
+    var offInp = el("input", {type:"text", placeholder:"New office name (e.g. OHM Surkhet)", value: S.newOff,
+      oninput: function(){ S.newOff=this.value; },
+      onkeydown: function(e){ if(e.key==="Enter") addOffice(); }
+    });
+    headerChildren.push(
+      el("div", {cls:"sub-panel"}, [
+        el("div", {cls:"sub-panel-row"}, [
+          offInp,
+          el("button", {cls:"btn-add", onclick: addOffice}, ["Add"]),
+          el("button", {cls:"btn-x", onclick: function(){ S.showAddOff=false; S.newOff=""; render(); }}, ["✕"])
+        ])
+      ])
+    );
+    setTimeout(function(){ offInp.focus(); }, 10);
+  }
+
+  // Delete Office panel
+  if (S.showDelOff) {
+    var delRows = S.offices.map(function(o) {
+      var nameEl;
+      if (o === S.office) {
+        nameEl = el("span", {cls:"del-row-name current"}, [o+" (current)"]);
+      } else {
+        nameEl = el("span", {cls:"del-row-name"}, [o]);
+      }
+      var actionEl;
+      if (o === "DHM") {
+        actionEl = el("span", {cls:"protected-lbl"}, ["default — cannot delete"]);
+      } else {
+        (function(name) {
+          actionEl = el("button", {cls:"btn-del-off", onclick: function(){ deleteOffice(name); }}, ["Delete"]);
+        })(o);
+      }
+      return el("div", {cls:"del-row"}, [nameEl, actionEl]);
+    });
+    headerChildren.push(
+      el("div", {cls:"del-panel"}, [
+        el("div", {cls:"del-panel-info"}, ["Select an office to delete. All its stations and status data will be removed."]),
+      ].concat(delRows))
+    );
+  }
+
+  app.appendChild(el("div", {cls:"header"}, headerChildren));
+
+  // ── TABS ──
+  app.appendChild(el("div",{cls:"tabs"},[
+    el("button",{cls:"tab"+(S.view==="status"?" active":""),
+      onclick:function(){ S.view="status"; render(); }},["📋 Daily Status"]),
+    el("button",{cls:"tab"+(S.view==="summary"?" active":""),
+      onclick:function(){ S.view="summary"; render(); }},["📊 Annual Summary"])
+  ]));
+
+  if (S.view === "summary") {
+    renderSummary(app);
+    app.appendChild(el("div",{cls:"footer"},[
+      el("span",{},["All changes auto-saved to browser storage"]),
+      el("span",{},[S.office+" · "+S.subtype+" · "+S.year])
+    ]));
+    app.appendChild(el("div",{cls:"dev-footer"},["Developed by: Avishek Pokhrel, Hydrologist, DHM"]));
+    return;
+  }
+  var legendItems = [["A","Active"],["I","Inactive"],["D","Discontinued"],["F","Flooded Away"],["-","Unchecked"]].map(function(pair) {
+    return el("span", {cls:"leg-item"}, [
+      el("span", {cls:"leg-code", style:"color:"+S_CLR[pair[0]]}, [pair[0]]),
+      el("span", {style:"color:#64748b"}, [" = "+pair[1]])
+    ]);
+  });
+  legendItems.push(el("span", {cls:"leg-hint"}, ["Click any day cell to cycle status"]));
+  app.appendChild(el("div", {cls:"legend"}, legendItems));
+
+  // ── MANAGE PANEL ──
+  if (S.showManage) {
+    var noInp = el("input", {type:"text", placeholder:"e.g. 610", value: S.newNo,
+      style:"width:72px",
+      oninput: function(){ S.newNo=this.value; }
+    });
+    var nameInp = el("input", {type:"text", placeholder:"Station or river name", value: S.newName,
+      oninput: function(){ S.newName=this.value; },
+      onkeydown: function(e){ if(e.key==="Enter") addStation(); }
+    });
+    var typeSel = mkSel(TYPES, S.newType, "", function(){ S.newType=this.value; });
+    var medSel  = mkSel(MEDIUMS, S.newMed, "", function(){ S.newMed=this.value; });
+
+    var stnFormChildren = [
+      el("div",{cls:"fld"},[el("label",{},[txt("Station No.")]), noInp]),
+      el("div",{cls:"fld fld-grow"},[el("label",{},[txt("Name / River")]), nameInp]),
+      el("div",{cls:"fld"},[el("label",{},[txt("Type")]), typeSel]),
+      el("div",{cls:"fld"},[el("label",{},[txt("Comm. Medium")]), medSel]),
+      el("button",{cls:"btn-stn-add", onclick: addStation},["+ Add & Save"])
+    ];
+
+    var listEl;
+    if (stns.length === 0) {
+      listEl = el("div",{cls:"empty-note"},["No stations yet. Fill in the form above and click Add & Save."]);
+    } else {
+      var tbody = el("tbody");
+      stns.forEach(function(stn, i) {
+        (function(s) {
+          tbody.appendChild(el("tr",{},[
+            el("td",{style:"text-align:center;color:#94a3b8;font-size:11px"}, [String(i+1)]),
+            el("td",{style:"text-align:center;font-family:monospace;font-size:11px"}, [s.no]),
+            el("td",{}, [s.name]),
+            el("td",{style:"text-align:center;color:#64748b;font-size:11px"}, [s.type]),
+            el("td",{style:"text-align:center;color:#64748b;font-size:11px"}, [s.medium]),
+            el("td",{style:"text-align:center"}, [
+              el("button",{cls:"btn-rm", onclick: function(){ deleteStation(s.id); }}, ["✕ remove"])
+            ])
+          ]));
+        })(stn);
+      });
+      listEl = el("div",{cls:"stn-list"},[
+        el("table",{},[
+          el("thead",{},[el("tr",{},[
+            el("th",{style:"text-align:center"},["#"]),
+            el("th",{style:"text-align:center"},["No."]),
+            el("th",{style:"text-align:left"},["Name / River"]),
+            el("th",{style:"text-align:center"},["Type"]),
+            el("th",{style:"text-align:center"},["Medium"]),
+            el("th",[])
+          ])]),
+          tbody
+        ])
+      ]);
+    }
+
+    app.appendChild(el("div",{cls:"manage-panel"},[
+      el("div",{cls:"manage-title"},[
+        txt("Stations for: "),
+        el("span",{cls:"off"},[S.office]),
+        txt(" / "),
+        el("span",{cls:"sub"},[S.subtype])
+      ]),
+      el("div",{cls:"stn-form"}, stnFormChildren),
+      listEl
+    ]));
+    setTimeout(function(){ noInp.focus(); }, 10);
+  }
+
+  // ── STATUS TABLE ──
+  // Build colgroup
+  var cg = el("colgroup");
+  [32,58,168,120,55].forEach(function(w){ var c=el("col"); c.style.width=w+"px"; cg.appendChild(c); });
+  for (var ci=0; ci<31; ci++) { var c=el("col"); c.style.width="26px"; cg.appendChild(c); }
+  [46,46,78].forEach(function(w){ var c=el("col"); c.style.width=w+"px"; cg.appendChild(c); });
+
+  // Header row
+  var hRow = el("tr");
+  [["S.N.",""],["Stn No.",""],["Name / River","tleft"],["Station Type",""],["Medium",""]].forEach(function(h){
+    hRow.appendChild(el("th",{cls:h[1]},[h[0]]));
+  });
+  for (var d=1; d<=days; d++) { hRow.appendChild(el("th",[String(d)])); }
+  for (var d=days+1; d<=31; d++) { hRow.appendChild(el("th",{cls:"dim"},[String(d)])); }
+  hRow.appendChild(el("th",{cls:"dark"},["Active"]));
+  hRow.appendChild(el("th",{cls:"dark"},["Inactive"]));
+  hRow.appendChild(el("th",{cls:"dark tleft"},["Remarks"]));
+
+  // Body
+  var tbody = el("tbody");
+  if (stns.length === 0) {
+    var noTd = el("td",{cls:"no-stn"},["No stations for "+S.office+" / "+S.subtype+". Open ⚙ Manage Stations above to add them."]);
+    noTd.setAttribute("colspan", String(5+31+3));
+    tbody.appendChild(el("tr",[noTd]));
+  } else {
+    stns.forEach(function(stn, i) {
+      var stats = getStnStats(stn.id);
+      var stnSt = (curSt[stn.id]) || {};
+      var tr = el("tr");
+      tr.appendChild(el("td",{style:"text-align:center;color:#94a3b8;padding:3px 4px;border-right:1px solid #e2e8f0"},[String(i+1)]));
+      tr.appendChild(el("td",{style:"text-align:center;font-family:monospace;padding:3px 4px;border-right:1px solid #e2e8f0"},[stn.no]));
+      tr.appendChild(el("td",{style:"text-align:left;padding-left:8px;padding-right:4px;border-right:1px solid #e2e8f0;overflow:hidden;white-space:nowrap;max-width:168px"},[stn.name]));
+      tr.appendChild(el("td",{style:"text-align:center;font-size:10px;color:#64748b;padding:3px 4px;border-right:1px solid #e2e8f0"},[stn.type]));
+      tr.appendChild(el("td",{style:"text-align:center;font-size:10px;padding:3px 4px;border-right:1px solid #e2e8f0"},[stn.medium]));
+      for (var d=1; d<=days; d++) {
+        (function(day) {
+          var v = stnSt[day] || "";
+          var td = el("td",{cls:"day"});
+          if (v) { td.style.background = S_BG[v]; td.style.color = S_CLR[v]; td.textContent = v; }
+          else { td.style.color = "#e2e8f0"; td.textContent = ""; }
+          td.title = "Day "+day+(v?" : "+v:"");
+          td.onclick = (function(id,day){ return function(){ cycleStatus(id,day); }; })(stn.id, day);
+          tr.appendChild(td);
+        })(d);
+      }
+      for (var d=days+1; d<=31; d++) {
+        var td = el("td",{cls:"grayed"});
+        tr.appendChild(td);
+      }
+      tr.appendChild(el("td",{cls:"active-days"},[stats.A ? String(stats.A) : ""]));
+      tr.appendChild(el("td",{cls:"inactive-days"},[stats.I ? String(stats.I) : ""]));
+      tr.appendChild(el("td",{cls:"remarks"},[""]));
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Footer summary rows
+  var tfoot = el("tfoot");
+  if (stns.length > 0) {
+    var summaryRows = [
+      ["Active (A)","#15803d","A"],
+      ["Inactive (I)","#dc2626","I"],
+      ["Discontinued (D)","#7c3aed","D"],
+      ["Flooded Away (F)","#c2410c","F"],
+      ["Unchecked (-)","#6b7280","-"],
+      ["Total","#1a3558","total"]
+    ];
+    summaryRows.forEach(function(row, ri) {
+      var label=row[0], color=row[1], key=row[2];
+      var tr = el("tr", {cls: ri===5?"total":""});
+      var lbl = el("td",{cls:"flbl",style:"color:"+color},[label]);
+      lbl.setAttribute("colspan","5");
+      tr.appendChild(lbl);
+      for (var d=1; d<=days; d++) {
+        var t = getDayTotals(d);
+        var v = key==="total" ? (t.A+t.I+t.D+t.F+t["-"]) : (t[key]||0);
+        var td = el("td",{style:"text-align:center;padding:3px 4px;border-right:1px solid #e2e8f0;font-size:11px;"+(v?"font-weight:bold;color:"+color:"color:#dde3ea")},
+          [v ? String(v) : ""]);
+        tr.appendChild(td);
+      }
+      for (var d=days+1; d<=31; d++) {
+        tr.appendChild(el("td",{cls:"grayed"}));
+      }
+      var emptyTd = el("td");
+      emptyTd.setAttribute("colspan","3");
+      tr.appendChild(emptyTd);
+      tfoot.appendChild(tr);
+    });
+  }
+
+  var tbl = el("table",{cls:"status"});
+  var minW = 5*80 + days*26 + 170;
+  tbl.style.minWidth = minW+"px";
+  tbl.appendChild(cg);
+  tbl.appendChild(el("thead",[hRow]));
+  tbl.appendChild(tbody);
+  tbl.appendChild(tfoot);
+  app.appendChild(el("div",{cls:"tbl-wrap"},[tbl]));
+
+  // ── FOOTER ──
+  app.appendChild(el("div",{cls:"footer"},[
+    el("span",{},["All changes auto-saved to browser storage"]),
+    el("span",{},[S.office+" · "+S.subtype+" · "+S.month+" "+S.year+" · "+stns.length+" station"+(stns.length!==1?"s":"")])
+  ]));
+  app.appendChild(el("div",{cls:"dev-footer"},["Developed by: Avishek Pokhrel, Hydrologist, DHM"]));
+}
+
+render();
+</script>
+</body>
+</html>

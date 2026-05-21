@@ -95,6 +95,16 @@ table.status tfoot tr.total td { background: #dce7f0; border-top: 2px solid #2b4
 table.status tfoot td.flbl { text-align: right; padding: 4px 10px; font-weight: bold; border-right: 1px solid #e2e8f0; }
 table.status td.no-stn { padding: 30px; text-align: center; color: #94a3b8; font-style: italic; }
 
+
+/* GSHEET SYNC */
+#sync-bar { position: fixed; bottom: 12px; right: 14px; z-index: 9999; }
+.sync-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 20px; font-size: 11px; font-family: Arial,sans-serif; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+.sync-ok   { background:#f0fdf4; border:1px solid #86efac; color:#15803d; }
+.sync-save { background:#eff6ff; border:1px solid #93c5fd; color:#1d4ed8; }
+.sync-err  { background:#fef2f2; border:1px solid #fca5a5; color:#dc2626; }
+.sync-init { background:#fefce8; border:1px solid #fde047; color:#92400e; }
+.sync-dot  { width:7px; height:7px; border-radius:50%; background:currentColor; display:inline-block; }
+
 /* FOOTER */
 .footer { padding: 6px 14px; background: #edf2f7; border-top: 1px solid #d1dce8; font-size: 10px; color: #94a3b8; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px; }
 .dev-footer { padding: 5px 14px; background: #1a3558; color: rgba(255,255,255,0.45); font-size: 10px; text-align: right; letter-spacing: 0.03em; border-radius: 0 0 8px 8px; }
@@ -127,8 +137,85 @@ table.sum input.rmk-inp { width: 100%; font-size: 11px; padding: 2px 5px; border
 table.sum input.rmk-inp:focus { border-color: #93c5fd; background: #fff; }
 .no-data-msg { padding: 30px; text-align: center; color: #94a3b8; font-style: italic; font-size: 12px; }
 </style>
+
+<script>
+// ══════════════════════════════════════════
+//  Google Sheets Backend
+// ══════════════════════════════════════════
+var GS_URL = "https://script.google.com/macros/s/AKfycbwRW9euFRs7xUtoxJqpqRjeqAjjPZVPrSsp9qT4kQVeXIn3_tI81QZvI91QklI1ZHKeqw/exec";
+
+var _saveTimer  = null;
+var _lastSaved  = null;
+
+function setSyncStatus(type, msg) {
+  var bar = document.getElementById("sync-bar");
+  if (!bar) return;
+  var cls = {ok:"sync-ok",save:"sync-save",err:"sync-err",init:"sync-init"}[type]||"sync-init";
+  bar.innerHTML = '<span class="sync-pill '+cls+'"><span class="sync-dot"></span> '+msg+'</span>';
+}
+
+// Load data from Google Sheet -> localStorage
+function gsLoad(callback) {
+  setSyncStatus("init", "Loading data…");
+  fetch(GS_URL, { method: "GET" })
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    if (data && typeof data === "object") {
+      Object.keys(data).forEach(function(k) {
+        try { localStorage.setItem(k, JSON.stringify(data[k])); } catch(e) {}
+      });
+      setSyncStatus("ok", "Loaded ✓");
+    }
+    if (callback) callback(true);
+  })
+  .catch(function(e) {
+    setSyncStatus("err", "Load failed — using local data");
+    if (callback) callback(false);
+  });
+}
+
+// Collect all rls_ keys from localStorage and push to Google Sheet
+function gsSave() {
+  var payload = {};
+  for (var i = 0; i < localStorage.length; i++) {
+    var k = localStorage.key(i);
+    if (k && k.indexOf("rls") === 0) {
+      try { payload[k] = JSON.parse(localStorage.getItem(k)); } catch(e) { payload[k] = localStorage.getItem(k); }
+    }
+  }
+  var json = JSON.stringify(payload);
+  if (json === _lastSaved) return;
+  _lastSaved = json;
+  setSyncStatus("save", "Saving…");
+  fetch(GS_URL, {
+    method: "POST",
+    body: json
+  })
+  .then(function(r){ return r.text(); })
+  .then(function() { setSyncStatus("ok", "Saved to Google Sheet ✓"); })
+  .catch(function(e) { setSyncStatus("err", "Save failed — check connection"); });
+}
+
+// Debounced save — waits 1.5s after last change
+function scheduleSave() {
+  if (_saveTimer) clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(gsSave, 1500);
+}
+
+// Auto-refresh every 30 seconds
+function startAutoRefresh() {
+  setInterval(function() {
+    if (document.hidden) return;
+    gsLoad(function(ok) {
+      if (ok && window._appRender) window._appRender();
+    });
+  }, 30000);
+}
+</script>
+
 </head>
 <body>
+<div id="sync-bar"><span class="sync-pill sync-init"><span class="sync-dot"></span> Starting…</span></div>
 
 <div id="toast"></div>
 <div id="app"></div>
@@ -190,7 +277,10 @@ function dim(m) { return new Date(S.year, MONTHS.indexOf(m)+1, 0).getDate(); }
 function SK(o,s) { return "rls_stn_"+sk(o)+"_"+sk(s); }
 function TK(o,s,m) { return "rls_st_"+sk(o)+"_"+sk(s)+"_"+S.year+"_"+sk(m); }
 function lGet(k) { try { var v=localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch(e) { return null; } }
-function lSet(k,v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} }
+function lSet(k,v) {
+  try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {}
+  if (typeof scheduleSave !== "undefined") scheduleSave();
+}
 function lDel(k) { try { localStorage.removeItem(k); } catch(e) {} }
 
 // ── state ──
@@ -833,9 +923,16 @@ function render() {
   app.appendChild(el("div",{cls:"dev-footer"},["Developed by: Avishek Pokhrel, Hydrologist, DHM"]));
 }
 
-render();
+window._appRender = render;
+if (typeof gsLoad !== "undefined") {
+  gsLoad(function() {
+    render();
+    startAutoRefresh();
+  });
+} else {
+  render();
+}
 </script>
-var JSONBIN_KEY = "$2a$1$BQ0.7CNAbAI.SFIte.7gZ.l6hj/S7MJjn5cgkMReo.KboG3ra1ilS";
-var JSONBIN_ID  = "6a0f2538ee5a733b12f870e6";
 </body>
 </html>
+

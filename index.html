@@ -50,7 +50,8 @@ select,input,button{font-family:inherit}
 
 /* ── HEADER ── */
 .header{background:#1a3558;color:#fff;padding:12px 16px}
-.header-title{font-size:14px;font-weight:bold;margin-bottom:10px}
+.header-title{font-size:14px;font-weight:bold;margin-bottom:10px;cursor:pointer;display:inline-block}
+.header-title:hover{opacity:.85;text-decoration:underline;text-underline-offset:3px}
 .header-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .ctrl{display:flex;align-items:center;gap:5px}
 .ctrl-lbl{font-size:11px;opacity:.7;white-space:nowrap}
@@ -184,6 +185,16 @@ select,input,button{font-family:inherit}
   cursor:pointer;background:#f1f5f9;padding:2px 7px;border-radius:4px;
   border:1px solid #e2e8f0}
 .off-checks label:hover{background:#dce7f0}
+.sub-checks{display:flex;flex-wrap:wrap;gap:4px;padding:2px 0}
+.sub-checks label{display:flex;align-items:center;gap:3px;font-size:11px;
+  cursor:pointer;background:#f0fdf4;padding:2px 7px;border-radius:4px;
+  border:1px solid #bbf7d0}
+.sub-checks label:hover{background:#dcfce7}
+.sub-checks label.snow{background:#eff6ff;border-color:#bfdbfe}
+.sub-checks label.snow:hover{background:#dbeafe}
+.perm-section{margin-top:6px}
+.perm-section-lbl{font-size:10px;font-weight:bold;color:#475569;text-transform:uppercase;
+  letter-spacing:.05em;margin-bottom:4px}
 .btn-sm{font-size:11px;padding:3px 8px;border-radius:4px;cursor:pointer;
   border:1px solid #d1d5db;background:#fff;color:#374151}
 .btn-sm:hover{background:#f1f5f9}
@@ -501,7 +512,7 @@ function checkSession(){
     var sess=JSON.parse(sessionStorage.getItem("rls_session")||"null");
     if(sess&&sess.userId){
       var u=getUsers().find(function(x){return x.id===sess.userId;});
-      if(u){AUTH.loggedIn=true;AUTH.user={id:u.id,username:u.username,role:u.role,offices:u.offices||[]};return true;}
+      if(u){AUTH.loggedIn=true;AUTH.user={id:u.id,username:u.username,role:u.role,offices:u.offices||[],subtypes:u.subtypes||[]};return true;}
     }
   }catch(e){}
   return false;
@@ -512,7 +523,7 @@ function doLogin(un,pw,cap){
   var users=getUsers();
   var u=users.find(function(x){return x.username===un&&x.pwd===hashPwd(pw);});
   if(!u){AUTH.loginError="Invalid username or password.";return false;}
-  AUTH.loggedIn=true;AUTH.user={id:u.id,username:u.username,role:u.role,offices:u.offices||[]};
+  AUTH.loggedIn=true;AUTH.user={id:u.id,username:u.username,role:u.role,offices:u.offices||[],subtypes:u.subtypes||[]};
   AUTH.loginError="";
   sessionStorage.setItem("rls_session",JSON.stringify({userId:u.id}));
   return true;
@@ -534,6 +545,12 @@ function getVisibleOffices(){
   var all=lGet("rls_offices")||["DHM"];
   if(!AUTH.user||AUTH.user.role==="admin")return all;
   return all.filter(function(o){return AUTH.user.offices.indexOf(o)>=0;});
+}
+function getVisibleSubtypes(){
+  if(!AUTH.user||AUTH.user.role==="admin")return SUBTYPES;
+  var allowed=AUTH.user.subtypes;
+  if(!allowed||allowed.length===0)return SUBTYPES; // backward-compat: no restriction = all
+  return SUBTYPES.filter(function(s){return allowed.indexOf(s)>=0;});
 }
 
 /* ── HELPERS ── */
@@ -560,7 +577,7 @@ var S={
   showManage:false,showAddOff:false,showDelOff:false,showUserMgmt:false,
   view:"status",
   newOff:"",newNo:"",newName:"",newElev:"",newType:"Manual+Automatic",newMed:"GSM",
-  newUsr:{username:"",password:"",role:"dataentry",offices:{}}
+  newUsr:{username:"",password:"",role:"dataentry",offices:{},subtypes:{}}
 };
 
 function initStns(){
@@ -865,8 +882,9 @@ function addUser(){
   var users=getUsers();
   if(users.find(function(u){return u.username===nu.username.trim();})){flash("Username already exists",true);return;}
   var selOff=Object.keys(nu.offices).filter(function(o){return nu.offices[o];});
-  users.push({id:"u_"+Date.now(),username:nu.username.trim(),pwd:hashPwd(nu.password.trim()),role:nu.role,offices:selOff});
-  saveUsers(users);S.newUsr={username:"",password:"",role:"dataentry",offices:{}};
+  var selSub=Object.keys(nu.subtypes).filter(function(s){return nu.subtypes[s];});
+  users.push({id:"u_"+Date.now(),username:nu.username.trim(),pwd:hashPwd(nu.password.trim()),role:nu.role,offices:selOff,subtypes:selSub});
+  saveUsers(users);S.newUsr={username:"",password:"",role:"dataentry",offices:{},subtypes:{}};
   flash("User '"+nu.username.trim()+"' added");render();
 }
 function deleteUser(id){
@@ -958,6 +976,15 @@ function updateUserOffices(id,checkEl,office){
   else{u.offices=u.offices.filter(function(o){return o!==office;});}
   saveUsers(users);flash("Offices updated");
 }
+function updateUserSubtypes(id,checkEl,subtype){
+  var users=getUsers();
+  var u=users.find(function(x){return x.id===id;});
+  if(!u)return;
+  if(!u.subtypes)u.subtypes=[];
+  if(checkEl.checked){if(u.subtypes.indexOf(subtype)<0)u.subtypes.push(subtype);}
+  else{u.subtypes=u.subtypes.filter(function(s){return s!==subtype;});}
+  saveUsers(users);flash("Station type access updated");
+}
 
 /* ── SUMMARY DOWNLOAD ── */
 function downloadSummaryCSV(){
@@ -1012,11 +1039,13 @@ function downloadMonthPDF(month){
   var k=TK(S.office,S.subtype,month);
   if(S.status[k]===undefined)S.status[k]=lGet(k)||{};
   var days=dim(month);
-  // Day-column headers
+
+  // Day-column headers — compact, fixed width
   var dHdrs="";
   for(var d=1;d<=days;d++){
-    dHdrs+='<th style="background:#1e3d6a;padding:2px 1px;font-size:9px;width:18px">'+d+'</th>';
+    dHdrs+='<th class="dc">'+d+'</th>';
   }
+
   var bodyRows="";
   stns.forEach(function(stn,idx){
     var st=(S.status[k]&&S.status[k][stn.id])||{};
@@ -1025,43 +1054,106 @@ function downloadMonthPDF(month){
     for(var d=1;d<=days;d++){
       var v=st[d]||"";
       if(cnt[v]!==undefined)cnt[v]++;
-      var bg=v==="A"?"#f0fdf4":v==="I"?"#fef2f2":v==="F"?"#fff7ed":v==="-"?"#f9fafb":"";
-      var col=v==="A"?"#15803d":v==="I"?"#dc2626":v==="F"?"#c2410c":v==="-"?"#6b7280":"#ccc";
-      dayCells+='<td style="text-align:center;padding:1px;font-size:9px;font-weight:bold;background:'+bg+';color:'+col+'">'+
-        (v||"")+'</td>';
+      var bg=v==="A"?"#d1fae5":v==="I"?"#fee2e2":v==="F"?"#ffedd5":v==="-"?"#f1f5f9":"";
+      var col=v==="A"?"#065f46":v==="I"?"#991b1b":v==="F"?"#9a3412":v==="-"?"#475569":"";
+      dayCells+='<td class="dc" style="background:'+bg+';color:'+col+'">'+( v||"" )+'</td>';
     }
-    bodyRows+='<tr style="background:'+(idx%2===0?"#fff":"#f8fafc")+'">'+
-      '<td style="padding:2px 4px;text-align:center;color:#94a3b8;font-size:9px">'+(idx+1)+'</td>'+
-      '<td style="padding:2px 5px;font-family:monospace;font-size:9px;white-space:nowrap">'+stn.no+'</td>'+
-      '<td style="padding:2px 6px;font-size:10px;white-space:nowrap">'+stn.name+'</td>'+
+    bodyRows+='<tr class="'+(idx%2===0?"":"alt")+'">'+
+      '<td class="c dim">'+(idx+1)+'</td>'+
+      '<td class="c mono">'+stn.no+'</td>'+
+      '<td class="name">'+stn.name+'</td>'+
       dayCells+
-      '<td style="text-align:center;padding:2px;color:#15803d;font-weight:bold;font-size:10px">'+cnt.A+'</td>'+
-      '<td style="text-align:center;padding:2px;color:#dc2626;font-weight:bold;font-size:10px">'+cnt.I+'</td>'+
-      '<td style="text-align:center;padding:2px;color:#c2410c;font-weight:bold;font-size:10px">'+cnt.F+'</td>'+
-      '<td style="text-align:center;padding:2px;color:#6b7280;font-weight:bold;font-size:10px">'+cnt["-"]+'</td></tr>';
+      '<td class="c act">'+cnt.A+'</td>'+
+      '<td class="c ina">'+cnt.I+'</td>'+
+      '<td class="c fld">'+cnt.F+'</td>'+
+      '<td class="c unc">'+cnt["-"]+'</td></tr>';
   });
+
+  // Totals footer row
+  var totRow='<tr class="tot"><td class="c" colspan="3">Daily Total</td>';
+  for(var d=1;d<=days;d++){
+    var ta=0,ti=0,tf=0,tu=0;
+    stns.forEach(function(stn){
+      var st2=(S.status[k]&&S.status[k][stn.id])||{};
+      var v=st2[d]||"";
+      if(v==="A")ta++;else if(v==="I")ti++;else if(v==="F")tf++;else if(v==="-")tu++;
+    });
+    totRow+='<td class="dc c" style="font-size:7px;line-height:1.1;padding:1px 0">'+
+      '<span style="color:#065f46">'+ta+'</span><br>'+
+      '<span style="color:#991b1b">'+ti+'</span></td>';
+  }
+  totRow+='<td class="c act" style="font-weight:bold">'+stns.reduce(function(s,stn){var st=(S.status[k]&&S.status[k][stn.id])||{};var c=0;for(var d=1;d<=days;d++)if((st[d]||"")==="A")c++;return s+c;},0)+'</td>'+
+    '<td class="c ina" style="font-weight:bold">'+stns.reduce(function(s,stn){var st=(S.status[k]&&S.status[k][stn.id])||{};var c=0;for(var d=1;d<=days;d++)if((st[d]||"")==="I")c++;return s+c;},0)+'</td>'+
+    '<td class="c fld" style="font-weight:bold">'+stns.reduce(function(s,stn){var st=(S.status[k]&&S.status[k][stn.id])||{};var c=0;for(var d=1;d<=days;d++)if((st[d]||"")==="F")c++;return s+c;},0)+'</td>'+
+    '<td class="c unc" style="font-weight:bold">'+stns.reduce(function(s,stn){var st=(S.status[k]&&S.status[k][stn.id])||{};var c=0;for(var d=1;d<=days;d++)if((st[d]||"")==="")c++;return s+c;},0)+'</td></tr>';
+
   var phtml='<!DOCTYPE html><html><head><meta charset="UTF-8">'+
     '<title>'+month+' '+S.year+' — '+S.office+'</title>'+
-    '<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;padding:8px}'+
-    'h2{font-size:13px;color:#1a3558;margin-bottom:2px}p{font-size:9px;color:#64748b;margin-bottom:6px}'+
-    'table{border-collapse:collapse;width:100%}'+
-    'th{background:#2b4d7c;color:#fff;padding:3px 2px;text-align:center;font-size:9px;white-space:nowrap}'+
-    'th.tleft{text-align:left;padding-left:5px}'+
-    'td{border-bottom:1px solid #e8edf3;vertical-align:middle}'+
-    '@page{size:A3 landscape;margin:8mm}@media print{body{padding:0}}</style></head>'+
-    '<body><h2>Monthly Status — '+month+' '+S.year+' &nbsp;·&nbsp; '+S.office+' / '+S.subtype+'</h2>'+
-    '<p>Generated: '+new Date().toLocaleDateString()+' &nbsp;·&nbsp; '+stns.length+' stations &nbsp;·&nbsp; '+days+' days</p>'+
-    '<table><thead><tr>'+
-    '<th style="width:22px">#</th>'+
-    '<th class="tleft" style="width:52px">Stn No.</th>'+
-    '<th class="tleft" style="min-width:120px">Name / River</th>'+
-    dHdrs+
-    '<th style="color:#4ade80;background:#1a3558;width:20px">A</th>'+
-    '<th style="color:#f87171;background:#1a3558;width:20px">I</th>'+
-    '<th style="color:#fb923c;background:#1a3558;width:20px">F</th>'+
-    '<th style="color:#d1d5db;background:#1a3558;width:20px">-</th>'+
-    '</tr></thead><tbody>'+bodyRows+'</tbody></table>'+
-    '<script>setTimeout(function(){window.print();},400);<\/script></body></html>';
+    '<style>'+
+    '*{margin:0;padding:0;box-sizing:border-box}'+
+    'html,body{width:100%;font-family:Arial,sans-serif;font-size:8px}'+
+    'body{padding:6mm}'+
+    '.head{margin-bottom:4px}'+
+    '.head h2{font-size:11px;color:#1a3558;font-weight:bold}'+
+    '.head p{font-size:8px;color:#64748b;margin-top:2px}'+
+    '.legend{display:flex;gap:12px;margin-bottom:5px;font-size:8px}'+
+    '.legend span{display:flex;align-items:center;gap:3px}'+
+    '.lb{display:inline-block;width:8px;height:8px;border-radius:2px}'+
+    'table{border-collapse:collapse;table-layout:fixed;width:100%}'+
+    'th{background:#1a3558;color:#fff;padding:2px 1px;text-align:center;font-size:8px;font-weight:bold;white-space:nowrap;overflow:hidden}'+
+    'th.tleft{text-align:left;padding-left:4px}'+
+    'td{border:1px solid #e2e8f0;vertical-align:middle;overflow:hidden;white-space:nowrap}'+
+    'tr.alt td{background:#f8fafc}'+
+    'tr.tot td{background:#dce7f0;border-top:2px solid #2b4d7c;font-weight:bold}'+
+    '.c{text-align:center;padding:1px}'+
+    '.dc{width:14px;text-align:center;padding:1px 0;font-size:8px;font-weight:bold}'+
+    '.dim{color:#94a3b8;font-size:7px}'+
+    '.mono{font-family:monospace;font-size:8px;text-overflow:ellipsis}'+
+    '.name{padding:1px 4px;font-size:8px;text-overflow:ellipsis}'+
+    '.act{color:#065f46;background:#d1fae5!important;font-weight:bold}'+
+    '.ina{color:#991b1b;background:#fee2e2!important;font-weight:bold}'+
+    '.fld{color:#9a3412;background:#ffedd5!important;font-weight:bold}'+
+    '.unc{color:#475569;background:#f1f5f9!important;font-weight:bold}'+
+    '@page{size:A3 landscape;margin:6mm}'+
+    '@media print{body{padding:0}html{zoom:1}}'+
+    '</style></head>'+
+    '<body>'+
+    '<div class="head">'+
+      '<h2>Monthly Status Report &nbsp;—&nbsp; '+month+' '+S.year+'</h2>'+
+      '<p>'+S.office+' / '+S.subtype+' &nbsp;·&nbsp; '+stns.length+' stations &nbsp;·&nbsp; '+days+' days &nbsp;·&nbsp; Generated: '+new Date().toLocaleDateString()+'</p>'+
+    '</div>'+
+    '<div class="legend">'+
+      '<span><span class="lb" style="background:#d1fae5;border:1px solid #6ee7b7"></span> A = Active</span>'+
+      '<span><span class="lb" style="background:#fee2e2;border:1px solid #fca5a5"></span> I = Inactive</span>'+
+      '<span><span class="lb" style="background:#ffedd5;border:1px solid #fdba74"></span> F = Flooded Away</span>'+
+      '<span><span class="lb" style="background:#f1f5f9;border:1px solid #cbd5e1"></span> - = Unchecked</span>'+
+    '</div>'+
+    '<table>'+
+      '<colgroup>'+
+        '<col style="width:18px">'+   // #
+        '<col style="width:44px">'+   // Stn No
+        '<col style="width:130px">'+  // Name (remaining space goes here via table-layout)
+        // day cols set in loop below — each 14px
+        '<col style="width:22px">'+   // A
+        '<col style="width:22px">'+   // I
+        '<col style="width:22px">'+   // F
+        '<col style="width:22px">'+   // -
+      '</colgroup>'+
+      '<thead><tr>'+
+        '<th class="tleft">#</th>'+
+        '<th class="tleft">Stn No.</th>'+
+        '<th class="tleft">Name / River</th>'+
+        dHdrs+
+        '<th style="background:#14532d;color:#bbf7d0">A</th>'+
+        '<th style="background:#7f1d1d;color:#fecaca">I</th>'+
+        '<th style="background:#7c2d12;color:#fed7aa">F</th>'+
+        '<th style="background:#334155;color:#e2e8f0">-</th>'+
+      '</tr></thead>'+
+      '<tbody>'+bodyRows+'</tbody>'+
+      '<tfoot>'+totRow+'</tfoot>'+
+    '</table>'+
+    '<script>setTimeout(function(){window.print();},500);<\/script>'+
+    '</body></html>';
   var w=window.open("","_blank","width=1400,height=800");
   if(w){w.document.write(phtml);w.document.close();}
   else flash("Popup blocked — allow popups to print PDF",true);
@@ -1248,7 +1340,7 @@ function renderUserPanel(app){
   var allOffices=lGet("rls_offices")||S.offices;
   var users=getUsers();
   var panel=el("div",{cls:"user-mgmt-panel"});
-  panel.appendChild(el("div",{cls:"manage-title"},["👥 User Management — Roles & Office Assignment"]));
+  panel.appendChild(el("div",{cls:"manage-title"},["👥 User Management — Roles, Offices & Station Type Access"]));
 
   // Add user form
   var nu=S.newUsr;
@@ -1267,6 +1359,15 @@ function renderUserPanel(app){
     (function(off){chk.onchange=function(){S.newUsr.offices[off]=this.checked;};})(o);
     offChecks.appendChild(el("label",[chk,txt(" "+o)]));
   });
+  // Subtype access checkboxes for new user
+  var subChecksNew=el("div",{cls:"sub-checks"});
+  SUBTYPES.forEach(function(st){
+    var isSnow=st.indexOf("Snow")>=0;
+    var chk=el("input",{type:"checkbox"});chk.checked=!!nu.subtypes[st];
+    (function(s){chk.onchange=function(){S.newUsr.subtypes[s]=this.checked;};})(st);
+    var lbl=el("label",{cls:isSnow?"snow":""},[chk,txt(" "+st.replace("Snow Stations — ","❄ ").replace("Hydrological Stations","🌊 Hydrological"))]);
+    subChecksNew.appendChild(lbl);
+  });
   panel.appendChild(el("div",{cls:"user-form"},[
     el("div",{cls:"fld"},[el("label",[txt("Username")]),unI]),
     el("div",{cls:"fld"},[el("label",[txt("Password")]),pwWrap(pwI)]),
@@ -1276,6 +1377,12 @@ function renderUserPanel(app){
       nu.role==="admin"
         ?el("span",{style:"font-size:11px;color:#64748b;padding-top:5px;display:block"},["Admin can access all offices"])
         :offChecks
+    ]),
+    el("div",{cls:"fld"},[
+      el("label",[txt("Station Type Access")]),
+      nu.role==="admin"
+        ?el("span",{style:"font-size:11px;color:#64748b;padding-top:5px;display:block"},["Admin can access all station types"])
+        :subChecksNew
     ]),
     el("button",{cls:"btn-stn-add",onclick:addUser},["+ Add User"])
   ]));
@@ -1295,6 +1402,22 @@ function renderUserPanel(app){
     }else{
       offEdit=el("span",{style:"font-size:11px;color:#64748b;font-style:italic"},["All offices"]);
     }
+    // Subtype access editing
+    var subEdit=el("div",{cls:"sub-checks"});
+    if(u.role!=="admin"){
+      SUBTYPES.forEach(function(st){
+        var isSnow=st.indexOf("Snow")>=0;
+        var chk=el("input",{type:"checkbox"});
+        var userSubs=u.subtypes||[];
+        // backward compat: if subtypes array is empty, treat as all-access
+        chk.checked=userSubs.length===0||userSubs.indexOf(st)>=0;
+        (function(uid,s,c){c.onchange=function(){updateUserSubtypes(uid,c,s);};})(u.id,st,chk);
+        var shortName=st.replace("Snow Stations — ","❄ ").replace("Hydrological Stations","🌊 Hydro");
+        subEdit.appendChild(el("label",{cls:isSnow?"snow":""},[chk,txt(" "+shortName)]));
+      });
+    }else{
+      subEdit=el("span",{style:"font-size:11px;color:#64748b;font-style:italic"},["All types"]);
+    }
     var actTd=el("td",{style:"text-align:center;white-space:nowrap"});
     if(!(u.id==="u_admin"&&isMe)){
       if(!isMe)actTd.appendChild(el("button",{cls:"btn-sm btn-sm-red",style:"margin-right:4px",
@@ -1306,6 +1429,7 @@ function renderUserPanel(app){
       el("td",{style:"font-weight:bold"},[u.username+(isMe?" 👤":""),(u.id==="u_admin"?el("span",{style:"font-size:10px;color:#94a3b8;margin-left:4px"},["(default)"]):"")]),
       el("td",{style:"text-align:center"},[el("span",{cls:"role-pill "+(u.role==="admin"?"role-admin":"role-de")},[u.role==="admin"?"Admin":"Data Entry"])]),
       el("td",[offEdit]),
+      el("td",[subEdit]),
       actTd
     ]));
   });
@@ -1315,6 +1439,7 @@ function renderUserPanel(app){
         el("th",{style:"text-align:left"},["Username"]),
         el("th",["Role"]),
         el("th",{style:"text-align:left"},["Assigned Offices"]),
+        el("th",{style:"text-align:left"},["Station Type Access"]),
         el("th",["Actions"])
       ])]),
       tbody
@@ -1527,7 +1652,7 @@ function render(){
 
   /* ── HEADER ── */
   var headerChildren=[
-    el("div",{cls:"header-title"},["🌊  DHM RLS Station Daily Status Register"]),
+    el("div",{cls:"header-title",style:"cursor:pointer",title:"Go to Daily Status",onclick:function(){S.view="status";S.showManage=false;S.showUserMgmt=false;render();}},["🌊  DHM RLS Station Daily Status Register"]),
     el("div",{cls:"header-row"},[
       el("div",{cls:"ctrl"},[el("span",{cls:"ctrl-lbl"},["Year:"]),
         mkSel(YEARS.map(String),String(S.year),"hdr-sel",function(){S.year=parseInt(this.value);S.status={};lSet("rls_year",S.year);render();})
@@ -1538,7 +1663,29 @@ function render(){
         isAdmin?el("button",{cls:"hdr-btn hdr-btn-red"+(S.showDelOff?" hdr-btn-active":""),onclick:function(){S.showDelOff=!S.showDelOff;S.showAddOff=false;render();}},["🗑"]):null
       ]),
       el("div",{cls:"ctrl"},[el("span",{cls:"ctrl-lbl"},["Sub-type:"]),
-        mkSubtypeSel(S.subtype,function(){S.subtype=this.value;render();})
+        (function(){
+          var visSub=getVisibleSubtypes();
+          // If current subtype not accessible, reset to first visible
+          if(visSub.indexOf(S.subtype)<0)S.subtype=visSub[0]||SUBTYPES[0];
+          var s=document.createElement("select");s.className="hdr-sel";
+          s.onchange=function(){S.subtype=this.value;render();};
+          SUBTYPE_GROUPS.forEach(function(grp){
+            var visOpts=grp.options.filter(function(o){return visSub.indexOf(o)>=0;});
+            if(visOpts.length===0)return;
+            if(visOpts.length===1){
+              var op=document.createElement("option");op.value=visOpts[0];op.textContent=visOpts[0];
+              if(visOpts[0]===S.subtype)op.selected=true;s.appendChild(op);
+            }else{
+              var og=document.createElement("optgroup");og.label=grp.label;
+              visOpts.forEach(function(o){
+                var op=document.createElement("option");op.value=o;op.textContent=o;
+                if(o===S.subtype)op.selected=true;og.appendChild(op);
+              });
+              s.appendChild(og);
+            }
+          });
+          return s;
+        })()
       ]),
       el("div",{cls:"ctrl"},[el("span",{cls:"ctrl-lbl"},["Month:"]),
         mkSel(MONTHS,S.month,"hdr-sel",function(){S.month=this.value;render();})
@@ -1773,6 +1920,7 @@ if(checkSession()){
 </script>
 </body>
 </html>
+
 
 
 

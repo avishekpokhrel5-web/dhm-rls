@@ -10,6 +10,14 @@
 body{font-family:Arial,sans-serif;font-size:13px;background:#e8edf3;padding:16px}
 select,input,button{font-family:inherit}
 
+/* ── PASSWORD EYE TOGGLE ── */
+.pw-wrap{position:relative;display:flex;align-items:center}
+.pw-wrap input{flex:1;padding-right:32px!important}
+.pw-eye{position:absolute;right:8px;background:none;border:none;cursor:pointer;
+  padding:0;font-size:15px;line-height:1;color:#94a3b8;user-select:none;
+  display:flex;align-items:center}
+.pw-eye:hover{color:#475569}
+
 /* ── LOGIN ── */
 .login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;
   background:linear-gradient(135deg,#0b1e38 0%,#1a3558 55%,#2b4d7c 100%);padding:20px}
@@ -139,26 +147,20 @@ select,input,button{font-family:inherit}
 .stn-list tbody td{padding:4px 8px;border-bottom:1px solid #f1f5f9;font-size:12px}
 .stn-list tbody tr:nth-child(even) td{background:#f8fafc}
 .btn-rm{font-size:11px;color:#dc2626;background:none;border:none;cursor:pointer;padding:2px 6px}
+.btn-rm:hover{text-decoration:underline}
 .btn-edit{font-size:11px;color:#2563eb;background:none;border:none;cursor:pointer;padding:2px 6px}
 .btn-edit:hover{text-decoration:underline}
-/* ── EDIT MODAL ── */
-#edit-modal{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.45);align-items:center;justify-content:center}
-#edit-modal.open{display:flex}
-.edit-card{background:#fff;border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,.25);width:100%;max-width:500px;overflow:hidden}
-.edit-card-hdr{background:#1a3558;color:#fff;padding:12px 16px;font-size:13px;font-weight:bold;display:flex;justify-content:space-between;align-items:center}
-.edit-card-hdr span{font-size:18px;cursor:pointer;opacity:.7}
-.edit-card-hdr span:hover{opacity:1}
-.edit-card-body{padding:16px}
-.edit-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
-.edit-fld{display:flex;flex-direction:column;gap:3px;flex:1;min-width:120px}
-.edit-fld label{font-size:10px;color:#64748b;font-weight:bold;text-transform:uppercase;letter-spacing:.04em}
-.edit-fld input,.edit-fld select{font-size:12px;padding:6px 9px;border-radius:5px;border:1.5px solid #d1d5db;outline:none;transition:border-color .15s}
-.edit-fld input:focus,.edit-fld select:focus{border-color:#2563eb}
-.edit-card-foot{display:flex;justify-content:flex-end;gap:8px;padding:10px 16px;background:#f8fafc;border-top:1px solid #e2e8f0}
-.btn-save-edit{padding:7px 18px;background:#1a3558;color:#fff;border:none;border-radius:5px;font-size:12px;font-weight:bold;cursor:pointer}
-.btn-save-edit:hover{background:#2b4d7c}
-.btn-cancel-edit{padding:7px 14px;background:#fff;color:#374151;border:1px solid #d1d5db;border-radius:5px;font-size:12px;cursor:pointer}
-.btn-cancel-edit:hover{background:#f1f5f9}
+.stn-actions{display:flex;gap:4px;align-items:center;white-space:nowrap}
+.edit-row td{background:#eff6ff!important;padding:6px 8px!important}
+.edit-inline{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-end}
+.edit-inline input,.edit-inline select{font-size:12px;padding:4px 7px;border-radius:4px;
+  border:1px solid #93c5fd;background:#fff;color:#000;outline:none}
+.edit-inline .btn-save{padding:4px 12px;background:#2563eb;color:#fff;border:none;
+  border-radius:4px;font-size:12px;cursor:pointer;font-weight:bold}
+.edit-inline .btn-save:hover{background:#1d4ed8}
+.edit-inline .btn-cancel{padding:4px 10px;background:#f1f5f9;color:#374151;border:1px solid #d1d5db;
+  border-radius:4px;font-size:12px;cursor:pointer}
+.edit-inline .btn-cancel:hover{background:#e2e8f0}
 .empty-note{color:#94a3b8;font-size:12px;font-style:italic;padding:8px 0}
 
 /* ── USER MANAGEMENT ── */
@@ -289,6 +291,74 @@ table.sum-month tfoot td{background:#dce7f0;border-top:1px solid #b0c4d8;
 .tab:hover{color:rgba(255,255,255,.85)}
 .tab.active{color:#fff;font-weight:bold;border-bottom:2px solid #60a5fa}
 
+/* ── LOCK WARNING MODAL ── */
+.lock-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10000;
+  display:flex;align-items:center;justify-content:center;}
+.lock-modal{background:#fff;border-radius:12px;width:460px;max-width:95vw;
+  box-shadow:0 12px 50px rgba(0,0,0,.3);overflow:hidden;}
+.lock-modal-hdr{background:#1a3558;color:#fff;padding:16px 20px;
+  display:flex;align-items:center;gap:10px;}
+.lock-modal-hdr .icon{font-size:22px;}
+.lock-modal-hdr .ttl{font-size:14px;font-weight:bold;}
+.lock-modal-hdr .sub{font-size:11px;opacity:.65;margin-top:2px;}
+.lock-modal-body{padding:16px 20px;max-height:320px;overflow-y:auto;}
+.lock-warn-intro{font-size:12px;color:#374151;margin-bottom:10px;line-height:1.5;}
+.lock-warn-intro b{color:#dc2626;}
+.miss-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px;}
+.miss-table th{background:#dce7f0;padding:4px 8px;text-align:left;
+  font-size:10px;color:#1a3558;border-bottom:1px solid #c4d4e3;}
+.miss-table td{padding:4px 8px;border-bottom:1px solid #f1f5f9;}
+.miss-table tbody tr:nth-child(even) td{background:#f8fafc;}
+.miss-days{font-size:10px;color:#dc2626;font-weight:bold;}
+.lock-modal-foot{padding:12px 20px;background:#f8fafc;border-top:1px solid #e2e8f0;
+  display:flex;gap:8px;justify-content:flex-end;align-items:center;}
+.lock-modal-foot .warn-note{flex:1;font-size:11px;color:#92400e;
+  background:#fef9c3;border:1px solid #fbbf24;border-radius:5px;
+  padding:5px 10px;line-height:1.4;}
+.btn-lock-cancel{padding:7px 16px;background:#f1f5f9;color:#374151;
+  border:1px solid #d1d5db;border-radius:6px;font-size:12px;cursor:pointer;}
+.btn-lock-cancel:hover{background:#e2e8f0;}
+.btn-lock-confirm{padding:7px 16px;background:#1a3558;color:#fff;
+  border:none;border-radius:6px;font-size:12px;font-weight:bold;cursor:pointer;}
+.btn-lock-confirm:hover{background:#2b4d7c;}
+.btn-lock-force{padding:7px 16px;background:#dc2626;color:#fff;
+  border:none;border-radius:6px;font-size:12px;font-weight:bold;cursor:pointer;}
+.btn-lock-force:hover{background:#b91c1c;}
+
+/* ── DOWNLOAD DROPDOWNS ── */
+.dl-wrap{position:relative;display:inline-block;}
+.btn-dl-drop{font-size:11px;padding:6px 12px;border-radius:5px;cursor:pointer;
+  font-weight:bold;display:flex;align-items:center;gap:5px;white-space:nowrap;
+  border:1px solid #d1d5db;background:#fff;color:#1a3558;}
+.btn-dl-drop:hover{background:#eff6ff;border-color:#93c5fd;color:#2563eb;}
+.btn-dl-drop.red{border-color:#fca5a5;color:#dc2626;}
+.btn-dl-drop.red:hover{background:#fef2f2;border-color:#f87171;}
+.dl-menu{position:absolute;top:calc(100% + 4px);left:0;z-index:600;
+  background:#fff;border:1px solid #d1dce8;border-radius:8px;
+  box-shadow:0 8px 28px rgba(0,0,0,.16);min-width:220px;overflow:hidden;display:none;}
+.dl-menu.open{display:block;}
+.dl-menu-section{font-size:10px;color:#94a3b8;padding:7px 13px 4px;
+  text-transform:uppercase;letter-spacing:.06em;font-weight:bold;
+  border-bottom:1px solid #f1f5f9;background:#fafbfc;}
+.dl-menu-item{display:flex;align-items:center;padding:7px 13px;
+  cursor:pointer;font-size:12px;gap:10px;border-bottom:1px solid #f8fafc;
+  transition:background .1s;}
+.dl-menu-item:last-child{border-bottom:none;}
+.dl-menu-item:hover{background:#eff6ff;}
+.dl-menu-item.pdf-item:hover{background:#fef2f2;}
+.dl-menu-item .mi-icon{font-size:13px;width:18px;text-align:center;flex-shrink:0;}
+.dl-menu-item .mi-label{flex:1;color:#1a3558;line-height:1.3;}
+.dl-menu-item .mi-label .mi-sub{display:block;font-size:10px;color:#94a3b8;margin-top:1px;}
+.dl-menu-item.pdf-item .mi-label{color:#dc2626;}
+.dl-menu-item .mi-badge{font-size:9px;padding:2px 6px;border-radius:3px;
+  font-weight:bold;white-space:nowrap;}
+.mi-badge-annual{background:#dbeafe;color:#1d4ed8;}
+.mi-badge-month{background:#f1f5f9;color:#64748b;}
+.dl-menu-divider{height:1px;background:#e2e8f0;margin:2px 0;}
+.dl-menu-months{max-height:220px;overflow-y:auto;}
+.dl-menu-months .dl-menu-item .mi-label{color:#374151;}
+.dl-no-data{color:#c4d4e3!important;}
+
 /* ── PRINT ── */
 @media print{
   body{background:#fff;padding:4px}
@@ -314,12 +384,24 @@ function setSyncStatus(type,msg){
 }
 function gsLoad(cb){
   setSyncStatus("init","Loading data…");
+  // Protect rls_users: user accounts and office assignments are local-authoritative.
+  // The 30-second auto-refresh must NEVER wipe assignments by pulling stale sheet data.
+  var PROTECTED=["rls_users"];
+  var localSnap={};
+  PROTECTED.forEach(function(k){try{var v=localStorage.getItem(k);if(v)localSnap[k]=v;}catch(e){}});
+
   fetch(GS_URL,{method:"GET"})
   .then(function(r){return r.json();})
   .then(function(data){
     if(data&&typeof data==="object"){
       Object.keys(data).forEach(function(k){
+        if(PROTECTED.indexOf(k)>=0)return; // skip — local wins
         try{localStorage.setItem(k,JSON.stringify(data[k]));}catch(e){}
+      });
+      // Restore protected keys from snapshot; seed from sheet only if nothing local
+      PROTECTED.forEach(function(k){
+        if(localSnap[k]){try{localStorage.setItem(k,localSnap[k]);}catch(e){}}
+        else if(data[k]!==undefined){try{localStorage.setItem(k,JSON.stringify(data[k]));}catch(e){}}
       });
       setSyncStatus("ok","Loaded ✓");
     }
@@ -599,9 +681,89 @@ document.addEventListener("click",function(){
 
 /* ── LOCK / UNLOCK ── */
 function lockMonth(){
-  if(!confirm("🔒 Lock "+S.month+" "+S.year+" for "+S.office+"?\n\nAll entries will be READ-ONLY.\nOnly Admin can unlock."))return;
-  lSet(LK(S.office,S.subtype,S.year,S.month),true);
-  flash(S.month+" "+S.year+" is now LOCKED 🔒");render();
+  var k=TK(S.office,S.subtype,S.month);
+  var curSt=S.status[k]||lGet(k)||{};
+  var stns=S.stns[SK(S.office,S.subtype)]||[];
+  var days=dim(S.month);
+
+  // Check for empty/unchecked days per station
+  var missing=[];
+  stns.forEach(function(stn){
+    var stnSt=curSt[stn.id]||{};
+    var emptyDays=[];
+    for(var d=1;d<=days;d++){
+      var v=stnSt[d];
+      if(!v||v==="")emptyDays.push(d);
+    }
+    if(emptyDays.length>0)missing.push({stn:stn,days:emptyDays});
+  });
+
+  if(missing.length===0){
+    // All filled — simple confirm then lock
+    if(!confirm("🔒 Lock "+S.month+" "+S.year+" for "+S.office+"?\n\nAll entries will be READ-ONLY.\nOnly Admin can unlock."))return;
+    lSet(LK(S.office,S.subtype,S.year,S.month),true);
+    flash(S.month+" "+S.year+" is now LOCKED 🔒");render();
+    return;
+  }
+
+  // Build warning modal
+  var overlay=document.createElement("div");
+  overlay.className="lock-modal-overlay";
+
+  var modal=document.createElement("div");
+  modal.className="lock-modal";
+
+  // Header
+  var hdr=document.createElement("div");hdr.className="lock-modal-hdr";
+  hdr.innerHTML='<span class="icon">⚠️</span><div><div class="ttl">Incomplete Entries Detected</div>'+
+    '<div class="sub">'+S.month+' '+S.year+' · '+S.office+'</div></div>';
+
+  // Body
+  var body=document.createElement("div");body.className="lock-modal-body";
+  var intro=document.createElement("div");intro.className="lock-warn-intro";
+  intro.innerHTML='<b>'+missing.length+' station'+(missing.length>1?'s have':'has')+' unfilled days</b> in '+
+    S.month+'. Locking will make these permanently read-only until an Admin unlocks the month.';
+  body.appendChild(intro);
+
+  var tbl=document.createElement("table");tbl.className="miss-table";
+  tbl.innerHTML='<thead><tr><th>#</th><th>Station No.</th><th>Name / River</th>'+
+    '<th>Missing Days</th><th style="text-align:center">Count</th></tr></thead>';
+  var tb=document.createElement("tbody");
+  missing.forEach(function(m,i){
+    var dStr=m.days.length<=10?m.days.join(", "):m.days.slice(0,10).join(", ")+"… ("+m.days.length+" total)";
+    var tr=document.createElement("tr");
+    tr.innerHTML='<td style="color:#94a3b8">'+(i+1)+'</td>'+
+      '<td style="font-family:monospace">'+m.stn.no+'</td>'+
+      '<td>'+m.stn.name+'</td>'+
+      '<td class="miss-days">'+dStr+'</td>'+
+      '<td style="text-align:center;font-weight:bold;color:#dc2626">'+m.days.length+'</td>';
+    tb.appendChild(tr);
+  });
+  tbl.appendChild(tb);body.appendChild(tbl);
+
+  // Footer
+  var foot=document.createElement("div");foot.className="lock-modal-foot";
+  var note=document.createElement("div");note.className="warn-note";
+  note.textContent="⚠ You can go back and fill the missing entries, or lock anyway.";
+
+  var cancelB=document.createElement("button");cancelB.className="btn-lock-cancel";
+  cancelB.textContent="← Go Back & Fill";
+  cancelB.onclick=function(){overlay.remove();};
+
+  var forceB=document.createElement("button");forceB.className="btn-lock-force";
+  forceB.textContent="🔒 Lock Anyway";
+  forceB.onclick=function(){
+    overlay.remove();
+    lSet(LK(S.office,S.subtype,S.year,S.month),true);
+    flash(S.month+" "+S.year+" is now LOCKED 🔒 (with missing entries)");render();
+  };
+
+  foot.appendChild(note);foot.appendChild(cancelB);foot.appendChild(forceB);
+  modal.appendChild(hdr);modal.appendChild(body);modal.appendChild(foot);
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  // Click outside to cancel
+  overlay.addEventListener("click",function(e){if(e.target===overlay)overlay.remove();});
 }
 function unlockMonth(){
   if(!AUTH.user||AUTH.user.role!=="admin"){flash("Only Admin can unlock a month.",true);return;}
@@ -621,7 +783,7 @@ function addStation(){
   S.newNo="";S.newName="";S.newElev="";flash('Station "'+name+'" added');render();
 }
 function deleteStation(id){
-  if(!AUTH.user||AUTH.user.role!=="admin"){flash("Only Admin can remove stations.",true);return;}
+  if(!AUTH.user){flash("You must be logged in to remove stations.",true);return;}
   var k=SK(S.office,S.subtype);
   S.stns[k]=(S.stns[k]||[]).filter(function(s){return s.id!==id;});lSet(k,S.stns[k]);
   flash("Station removed");render();
@@ -632,35 +794,45 @@ function editStation(id){
   var stns=S.stns[k]||[];
   var stn=stns.find(function(s){return s.id===id;});
   if(!stn)return;
-  var modal=document.getElementById("edit-modal");
-  document.getElementById("em-id").value=id;
-  document.getElementById("em-no").value=stn.no||"";
-  document.getElementById("em-name").value=stn.name||"";
-  document.getElementById("em-elev").value=stn.elev||"";
-  document.getElementById("em-type").value=stn.type||"Manual+Automatic";
-  document.getElementById("em-med").value=stn.medium||"GSM";
-  modal.classList.add("open");
-  setTimeout(function(){document.getElementById("em-name").focus();},80);
-}
-function saveEditStation(){
-  var id=document.getElementById("em-id").value;
-  var no=document.getElementById("em-no").value.trim();
-  var name=document.getElementById("em-name").value.trim();
-  var elev=document.getElementById("em-elev").value.trim();
-  var type=document.getElementById("em-type").value;
-  var med=document.getElementById("em-med").value;
-  if(!no||!name){flash("Station number and name are required.",true);return;}
-  var k=SK(S.office,S.subtype);
-  var stns=S.stns[k]||[];
-  var idx=stns.findIndex(function(s){return s.id===id;});
-  if(idx<0){flash("Station not found.",true);return;}
-  stns[idx]=Object.assign({},stns[idx],{no:no,name:name,elev:elev,type:type,medium:med});
-  S.stns[k]=stns;lSet(k,stns);
-  closeEditModal();
-  flash('Station "'+name+'" updated');render();
-}
-function closeEditModal(){
-  document.getElementById("edit-modal").classList.remove("open");
+  // Toggle: clicking edit again closes the row
+  var existing=document.getElementById("edit-row-"+id);
+  if(existing){existing.remove();return;}
+  var allRows=document.querySelectorAll(".stn-list tbody tr");
+  var targetRow=null;
+  allRows.forEach(function(r){if(r.getAttribute("data-stn-id")===id)targetRow=r;});
+  if(!targetRow)return;
+  var TYPES2=["Manual+Automatic","Manual","Automatic"];
+  var MEDS2=["GSM","Satellite","N/A"];
+  var editRow=document.createElement("tr");
+  editRow.id="edit-row-"+id;
+  editRow.className="edit-row";
+  var td=document.createElement("td");td.setAttribute("colspan","7");
+  var noI=document.createElement("input");noI.value=stn.no;noI.placeholder="Stn No.";noI.style.width="70px";
+  var nameI=document.createElement("input");nameI.value=stn.name;nameI.placeholder="Name / River";nameI.style.width="180px";
+  var elevI=document.createElement("input");elevI.value=stn.elev||"";elevI.placeholder="Elev (m)";elevI.style.width="70px";
+  var typeSel2=document.createElement("select");
+  TYPES2.forEach(function(t){var o=document.createElement("option");o.value=t;o.textContent=t;if(t===stn.type)o.selected=true;typeSel2.appendChild(o);});
+  var medSel2=document.createElement("select");
+  MEDS2.forEach(function(m){var o=document.createElement("option");o.value=m;o.textContent=m;if(m===stn.medium)o.selected=true;medSel2.appendChild(o);});
+  var saveBtn=document.createElement("button");saveBtn.className="btn-save";saveBtn.textContent="💾 Save";
+  var cancelBtn=document.createElement("button");cancelBtn.className="btn-cancel";cancelBtn.textContent="Cancel";
+  saveBtn.onclick=function(){
+    var nn=noI.value.trim(),nm=nameI.value.trim();
+    if(!nn||!nm){flash("Station number and name required",true);return;}
+    var k2=SK(S.office,S.subtype);
+    S.stns[k2]=(S.stns[k2]||[]).map(function(s){
+      if(s.id===id)return{id:s.id,no:nn,name:nm,elev:elevI.value.trim(),type:typeSel2.value,medium:medSel2.value};
+      return s;
+    });
+    lSet(k2,S.stns[k2]);
+    flash('Station "'+nm+'" updated ✓');render();
+  };
+  cancelBtn.onclick=function(){editRow.remove();};
+  var wrap=document.createElement("div");wrap.className="edit-inline";
+  [noI,nameI,elevI,typeSel2,medSel2,saveBtn,cancelBtn].forEach(function(e2){wrap.appendChild(e2);});
+  td.appendChild(wrap);editRow.appendChild(td);
+  targetRow.insertAdjacentElement("afterend",editRow);
+  nameI.focus();
 }
 function addOffice(){
   if(!AUTH.user||AUTH.user.role!=="admin"){flash("Only Admin can add offices.",true);return;}
@@ -705,11 +877,78 @@ function deleteUser(id){
   flash("User deleted");render();
 }
 function resetUserPwd(id){
-  var np=prompt("Enter new password:");
-  if(!np||!np.trim())return;
+  // Build a small inline modal instead of a native prompt()
+  var existing=document.getElementById("pwd-reset-modal");
+  if(existing)existing.remove();
+
   var users=getUsers();
   var u=users.find(function(x){return x.id===id;});
-  if(u){u.pwd=hashPwd(np.trim());saveUsers(users);flash("Password reset for "+u.username);}
+  if(!u)return;
+
+  var overlay=document.createElement("div");
+  overlay.id="pwd-reset-modal";
+  overlay.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10000;display:flex;align-items:center;justify-content:center;";
+
+  var box=document.createElement("div");
+  box.style.cssText="background:#fff;border-radius:10px;padding:24px 28px;width:340px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,.25);";
+
+  var title=document.createElement("div");
+  title.style.cssText="font-weight:bold;font-size:14px;color:#1a3558;margin-bottom:4px;";
+  title.textContent="Reset Password";
+
+  var sub=document.createElement("div");
+  sub.style.cssText="font-size:12px;color:#64748b;margin-bottom:16px;";
+  sub.textContent="Set new password for: "+u.username;
+
+  var lbl=document.createElement("label");
+  lbl.style.cssText="display:block;font-size:11px;font-weight:bold;color:#475569;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;";
+  lbl.textContent="New Password";
+
+  var inp=document.createElement("input");
+  inp.type="password";
+  inp.placeholder="Enter new password";
+  inp.style.cssText="font-size:13px;padding:9px 34px 9px 12px;border:1.5px solid #d1d5db;border-radius:6px;outline:none;width:100%;";
+  inp.addEventListener("focus",function(){inp.style.borderColor="#2563eb";inp.style.boxShadow="0 0 0 3px rgba(37,99,235,.1)";});
+  inp.addEventListener("blur",function(){inp.style.borderColor="#d1d5db";inp.style.boxShadow="none";});
+
+  var wrap=document.createElement("div");wrap.className="pw-wrap";wrap.style.marginBottom="16px";
+
+  var eyeBtn=document.createElement("button");eyeBtn.type="button";eyeBtn.className="pw-eye";
+  eyeBtn.innerHTML="&#128065;";eyeBtn.title="Show / hide password";
+  eyeBtn.onclick=function(){
+    var show=inp.type==="password";
+    inp.type=show?"text":"password";
+    eyeBtn.innerHTML=show?"&#128065;&#x20D7;":"&#128065;";
+    inp.focus();
+  };
+  wrap.appendChild(inp);wrap.appendChild(eyeBtn);
+
+  var btnRow=document.createElement("div");
+  btnRow.style.cssText="display:flex;gap:8px;justify-content:flex-end;";
+
+  var cancelB=document.createElement("button");
+  cancelB.textContent="Cancel";
+  cancelB.style.cssText="padding:8px 16px;background:#f1f5f9;color:#374151;border:1px solid #d1d5db;border-radius:6px;font-size:13px;cursor:pointer;";
+  cancelB.onclick=function(){overlay.remove();};
+
+  var saveB=document.createElement("button");
+  saveB.textContent="Save Password";
+  saveB.style.cssText="padding:8px 16px;background:#1a3558;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:bold;cursor:pointer;";
+  saveB.onclick=function(){
+    var np=inp.value.trim();
+    if(!np){inp.style.borderColor="#dc2626";inp.focus();return;}
+    var usrs=getUsers();
+    var uu=usrs.find(function(x){return x.id===id;});
+    if(uu){uu.pwd=hashPwd(np);saveUsers(usrs);flash("Password reset for "+uu.username);}
+    overlay.remove();
+  };
+  inp.addEventListener("keydown",function(e){if(e.key==="Enter")saveB.click();if(e.key==="Escape")overlay.remove();});
+  overlay.addEventListener("click",function(e){if(e.target===overlay)overlay.remove();});
+
+  btnRow.appendChild(cancelB);btnRow.appendChild(saveB);
+  box.appendChild(title);box.appendChild(sub);box.appendChild(lbl);box.appendChild(wrap);box.appendChild(btnRow);
+  overlay.appendChild(box);document.body.appendChild(overlay);
+  setTimeout(function(){inp.focus();},40);
 }
 function updateUserOffices(id,checkEl,office){
   var users=getUsers();
@@ -743,6 +982,89 @@ function downloadSummaryCSV(){
   var a=document.createElement("a");
   a.href="data:text/csv;charset=utf-8,\uFEFF"+encodeURIComponent(csv);
   a.download="Annual_Summary_"+sk(S.office)+"_"+S.year+".csv";a.click();
+}
+
+function downloadMonthCSV(month){
+  var stns=S.stns[SK(S.office,S.subtype)]||[];
+  var k=TK(S.office,S.subtype,month);
+  if(S.status[k]===undefined)S.status[k]=lGet(k)||{};
+  var days=dim(month);
+  var hdr=["S.N.","Station No.","Name / River","Elevation (m)","Type","Medium"];
+  for(var d=1;d<=days;d++)hdr.push(month.substring(0,3)+"-"+d);
+  hdr=hdr.concat(["Active (A)","Inactive (I)","Flooded Away (F)","Unchecked (-)"]);
+  var rows=[hdr];
+  stns.forEach(function(stn,idx){
+    var st=(S.status[k]&&S.status[k][stn.id])||{};
+    var row=[idx+1,stn.no,stn.name,stn.elev||"",stn.type,stn.medium];
+    var cnt={A:0,I:0,F:0,"-":0};
+    for(var d=1;d<=days;d++){var v=st[d]||"";row.push(v);if(cnt[v]!==undefined)cnt[v]++;}
+    row=row.concat([cnt.A,cnt.I,cnt.F,cnt["-"]]);
+    rows.push(row);
+  });
+  var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(",");}).join("\n");
+  var a=document.createElement("a");
+  a.href="data:text/csv;charset=utf-8,\uFEFF"+encodeURIComponent(csv);
+  a.download="Monthly_"+month+"_"+sk(S.office)+"_"+S.year+".csv";a.click();
+}
+
+function downloadMonthPDF(month){
+  var stns=S.stns[SK(S.office,S.subtype)]||[];
+  var k=TK(S.office,S.subtype,month);
+  if(S.status[k]===undefined)S.status[k]=lGet(k)||{};
+  var days=dim(month);
+  // Day-column headers
+  var dHdrs="";
+  for(var d=1;d<=days;d++){
+    dHdrs+='<th style="background:#1e3d6a;padding:2px 1px;font-size:9px;width:18px">'+d+'</th>';
+  }
+  var bodyRows="";
+  stns.forEach(function(stn,idx){
+    var st=(S.status[k]&&S.status[k][stn.id])||{};
+    var cnt={A:0,I:0,F:0,"-":0};
+    var dayCells="";
+    for(var d=1;d<=days;d++){
+      var v=st[d]||"";
+      if(cnt[v]!==undefined)cnt[v]++;
+      var bg=v==="A"?"#f0fdf4":v==="I"?"#fef2f2":v==="F"?"#fff7ed":v==="-"?"#f9fafb":"";
+      var col=v==="A"?"#15803d":v==="I"?"#dc2626":v==="F"?"#c2410c":v==="-"?"#6b7280":"#ccc";
+      dayCells+='<td style="text-align:center;padding:1px;font-size:9px;font-weight:bold;background:'+bg+';color:'+col+'">'+
+        (v||"")+'</td>';
+    }
+    bodyRows+='<tr style="background:'+(idx%2===0?"#fff":"#f8fafc")+'">'+
+      '<td style="padding:2px 4px;text-align:center;color:#94a3b8;font-size:9px">'+(idx+1)+'</td>'+
+      '<td style="padding:2px 5px;font-family:monospace;font-size:9px;white-space:nowrap">'+stn.no+'</td>'+
+      '<td style="padding:2px 6px;font-size:10px;white-space:nowrap">'+stn.name+'</td>'+
+      dayCells+
+      '<td style="text-align:center;padding:2px;color:#15803d;font-weight:bold;font-size:10px">'+cnt.A+'</td>'+
+      '<td style="text-align:center;padding:2px;color:#dc2626;font-weight:bold;font-size:10px">'+cnt.I+'</td>'+
+      '<td style="text-align:center;padding:2px;color:#c2410c;font-weight:bold;font-size:10px">'+cnt.F+'</td>'+
+      '<td style="text-align:center;padding:2px;color:#6b7280;font-weight:bold;font-size:10px">'+cnt["-"]+'</td></tr>';
+  });
+  var phtml='<!DOCTYPE html><html><head><meta charset="UTF-8">'+
+    '<title>'+month+' '+S.year+' — '+S.office+'</title>'+
+    '<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;padding:8px}'+
+    'h2{font-size:13px;color:#1a3558;margin-bottom:2px}p{font-size:9px;color:#64748b;margin-bottom:6px}'+
+    'table{border-collapse:collapse;width:100%}'+
+    'th{background:#2b4d7c;color:#fff;padding:3px 2px;text-align:center;font-size:9px;white-space:nowrap}'+
+    'th.tleft{text-align:left;padding-left:5px}'+
+    'td{border-bottom:1px solid #e8edf3;vertical-align:middle}'+
+    '@page{size:A3 landscape;margin:8mm}@media print{body{padding:0}}</style></head>'+
+    '<body><h2>Monthly Status — '+month+' '+S.year+' &nbsp;·&nbsp; '+S.office+' / '+S.subtype+'</h2>'+
+    '<p>Generated: '+new Date().toLocaleDateString()+' &nbsp;·&nbsp; '+stns.length+' stations &nbsp;·&nbsp; '+days+' days</p>'+
+    '<table><thead><tr>'+
+    '<th style="width:22px">#</th>'+
+    '<th class="tleft" style="width:52px">Stn No.</th>'+
+    '<th class="tleft" style="min-width:120px">Name / River</th>'+
+    dHdrs+
+    '<th style="color:#4ade80;background:#1a3558;width:20px">A</th>'+
+    '<th style="color:#f87171;background:#1a3558;width:20px">I</th>'+
+    '<th style="color:#fb923c;background:#1a3558;width:20px">F</th>'+
+    '<th style="color:#d1d5db;background:#1a3558;width:20px">-</th>'+
+    '</tr></thead><tbody>'+bodyRows+'</tbody></table>'+
+    '<script>setTimeout(function(){window.print();},400);<\/script></body></html>';
+  var w=window.open("","_blank","width=1400,height=800");
+  if(w){w.document.write(phtml);w.document.close();}
+  else flash("Popup blocked — allow popups to print PDF",true);
 }
 
 function downloadSummaryPDF(){
@@ -819,6 +1141,22 @@ function el(tag,attrs,children){
   return elem;
 }
 function txt(s){return document.createTextNode(s);}
+function pwWrap(inp){
+  /* Wraps a password <input> in a relative container with an eye-toggle button */
+  var wrap=document.createElement("div");wrap.className="pw-wrap";
+  var btn=document.createElement("button");btn.type="button";btn.className="pw-eye";
+  btn.title="Show / hide password";
+  btn.innerHTML="&#128065;"; // 👁
+  btn.onclick=function(){
+    var show=inp.type==="password";
+    inp.type=show?"text":"password";
+    btn.innerHTML=show?"&#128065;&#x20D7;":"&#128065;";
+    btn.title=show?"Hide password":"Show password";
+    inp.focus();
+  };
+  wrap.appendChild(inp);wrap.appendChild(btn);
+  return wrap;
+}
 function mkSel(opts,val,cls,onchange){
   var s=el("select",{cls:cls,onchange:onchange});
   opts.forEach(function(o){
@@ -881,7 +1219,7 @@ function renderLogin(){
     oninput:function(){AUTH.loginCaptcha=this.value;},
     onkeydown:function(e){if(e.key==="Enter")attemptLogin();}});
   body.appendChild(el("div",{cls:"lf"},[el("label",[txt("Username")]),unI]));
-  body.appendChild(el("div",{cls:"lf"},[el("label",[txt("Password")]),pwI]));
+  body.appendChild(el("div",{cls:"lf"},[el("label",[txt("Password")]),pwWrap(pwI)]));
   body.appendChild(el("div",{cls:"lf"},[
     el("label",[txt("Security Check")]),
     el("div",{cls:"captcha-box"},[AUTH.captchaA+"  +  "+AUTH.captchaB+"  =  ?"]),
@@ -931,7 +1269,7 @@ function renderUserPanel(app){
   });
   panel.appendChild(el("div",{cls:"user-form"},[
     el("div",{cls:"fld"},[el("label",[txt("Username")]),unI]),
-    el("div",{cls:"fld"},[el("label",[txt("Password")]),pwI]),
+    el("div",{cls:"fld"},[el("label",[txt("Password")]),pwWrap(pwI)]),
     el("div",{cls:"fld"},[el("label",[txt("Role")]),roleS]),
     el("div",{cls:"fld"},[
       el("label",[txt("Assign Offices")]),
@@ -1061,8 +1399,104 @@ function renderSummary(app){
   bar.appendChild(el("div",{cls:"sum-info"},[
     txt("Annual summary — "),el("b",[S.office]),txt(" / "),el("b",[S.subtype]),txt(" · "+S.year+" · "+stns.length+" stations")
   ]));
-  bar.appendChild(el("button",{cls:"btn-dl",onclick:downloadSummaryCSV},["⬇ Download CSV"]));
-  bar.appendChild(el("button",{cls:"btn-dl btn-dl-pdf",onclick:downloadSummaryPDF},["🖨 Print / Save PDF"]));
+  // ── CSV dropdown (Annual + Monthly) ──────────────────────────────────────
+  (function(){
+    var wrap=document.createElement("div");wrap.className="dl-wrap";
+    var btn=document.createElement("button");btn.className="btn-dl-drop";
+    btn.innerHTML="⬇ CSV ▾";
+    var menu=document.createElement("div");menu.className="dl-menu";
+
+    // Annual row
+    var secAnnual=document.createElement("div");secAnnual.className="dl-menu-section";
+    secAnnual.textContent="Full Year";
+    menu.appendChild(secAnnual);
+    var annRow=document.createElement("div");annRow.className="dl-menu-item";
+    annRow.innerHTML='<span class="mi-icon">📊</span>'+
+      '<span class="mi-label">Annual Summary CSV<span class="mi-sub">All 12 months · '+S.year+'</span></span>'+
+      '<span class="mi-badge mi-badge-annual">Annual</span>';
+    annRow.onclick=function(){downloadSummaryCSV();menu.classList.remove("open");};
+    menu.appendChild(annRow);
+
+    // Monthly rows
+    var divider=document.createElement("div");divider.className="dl-menu-divider";
+    menu.appendChild(divider);
+    var secMonth=document.createElement("div");secMonth.className="dl-menu-section";
+    secMonth.textContent="Individual Month";
+    menu.appendChild(secMonth);
+    var mWrap=document.createElement("div");mWrap.className="dl-menu-months";
+    MONTHS.forEach(function(m){
+      var k=TK(S.office,S.subtype,m);
+      var st=lGet(k)||{};
+      var hasData=Object.keys(st).length>0;
+      var item=document.createElement("div");item.className="dl-menu-item";
+      item.innerHTML='<span class="mi-icon">📅</span>'+
+        '<span class="mi-label'+(hasData?"":" dl-no-data")+'">'+m+
+        '<span class="mi-sub">'+(hasData?dim(m)+' days':'no data yet')+'</span></span>'+
+        '<span class="mi-badge mi-badge-month">CSV</span>';
+      item.onclick=(function(mo){return function(){downloadMonthCSV(mo);menu.classList.remove("open");};})(m);
+      mWrap.appendChild(item);
+    });
+    menu.appendChild(mWrap);
+
+    btn.onclick=function(e){e.stopPropagation();
+      document.querySelectorAll(".dl-menu.open").forEach(function(x){x.classList.remove("open");});
+      menu.classList.toggle("open");
+    };
+    wrap.appendChild(btn);wrap.appendChild(menu);
+    bar.appendChild(wrap);
+  })();
+
+  // ── PDF dropdown (Annual + Monthly) ──────────────────────────────────────
+  (function(){
+    var wrap=document.createElement("div");wrap.className="dl-wrap";
+    var btn=document.createElement("button");btn.className="btn-dl-drop red";
+    btn.innerHTML="🖨 PDF ▾";
+    var menu=document.createElement("div");menu.className="dl-menu";
+
+    // Annual row
+    var secAnnual=document.createElement("div");secAnnual.className="dl-menu-section";
+    secAnnual.textContent="Full Year";
+    menu.appendChild(secAnnual);
+    var annRow=document.createElement("div");annRow.className="dl-menu-item pdf-item";
+    annRow.innerHTML='<span class="mi-icon">📋</span>'+
+      '<span class="mi-label">Annual Summary PDF<span class="mi-sub">All 12 months · '+S.year+'</span></span>'+
+      '<span class="mi-badge mi-badge-annual">Annual</span>';
+    annRow.onclick=function(){downloadSummaryPDF();menu.classList.remove("open");};
+    menu.appendChild(annRow);
+
+    // Monthly rows
+    var divider=document.createElement("div");divider.className="dl-menu-divider";
+    menu.appendChild(divider);
+    var secMonth=document.createElement("div");secMonth.className="dl-menu-section";
+    secMonth.textContent="Individual Month";
+    menu.appendChild(secMonth);
+    var mWrap=document.createElement("div");mWrap.className="dl-menu-months";
+    MONTHS.forEach(function(m){
+      var k=TK(S.office,S.subtype,m);
+      var st=lGet(k)||{};
+      var hasData=Object.keys(st).length>0;
+      var item=document.createElement("div");item.className="dl-menu-item pdf-item";
+      item.innerHTML='<span class="mi-icon">🗓</span>'+
+        '<span class="mi-label'+(hasData?"":" dl-no-data")+'">'+m+
+        '<span class="mi-sub">'+(hasData?dim(m)+' days — print/save PDF':'no data yet')+'</span></span>'+
+        '<span class="mi-badge mi-badge-month">PDF</span>';
+      item.onclick=(function(mo){return function(){downloadMonthPDF(mo);menu.classList.remove("open");};})(m);
+      mWrap.appendChild(item);
+    });
+    menu.appendChild(mWrap);
+
+    btn.onclick=function(e){e.stopPropagation();
+      document.querySelectorAll(".dl-menu.open").forEach(function(x){x.classList.remove("open");});
+      menu.classList.toggle("open");
+    };
+    wrap.appendChild(btn);wrap.appendChild(menu);
+    bar.appendChild(wrap);
+  })();
+
+  // Close any open menu on outside click
+  document.addEventListener("click",function(){
+    document.querySelectorAll(".dl-menu.open").forEach(function(x){x.classList.remove("open");});
+  });
   wrap.appendChild(bar);
   if(stns.length===0){wrap.appendChild(el("div",{cls:"no-data-msg"},["No stations added yet."]));app.appendChild(wrap);return;}
   // 2-column grid of 12 month sections
@@ -1114,7 +1548,7 @@ function render(){
           ?el("button",{cls:"hdr-btn hdr-btn-locked",onclick:isAdmin?unlockMonth:function(){flash("Only Admin can unlock",true);}},["🔒 "+(isAdmin?"Click to Unlock":"Locked")])
           :el("button",{cls:"hdr-btn hdr-btn-lock",onclick:lockMonth},["🔒 Lock Month"])
       ):null,
-      el("button",{cls:"manage-btn"+(S.showManage?" active":""),onclick:function(){S.showManage=!S.showManage;S.showUserMgmt=false;render();}},["⚙ Stations ("+stns.length+")"]),
+      el("button",{cls:"manage-btn"+(S.showManage?" active":""),onclick:function(){S.showManage=!S.showManage;if(isAdmin)S.showUserMgmt=false;render();}},["⚙ Stations ("+stns.length+")"]),
       isAdmin?el("button",{cls:"manage-btn"+(S.showUserMgmt?" active":""),onclick:function(){S.showUserMgmt=!S.showUserMgmt;S.showManage=false;render();}},["👥 Users"]):null,
       el("div",{cls:"user-pill"},[
         txt("👤 "+AUTH.user.username),
@@ -1180,18 +1614,21 @@ function render(){
       var stbody=el("tbody");
       stns.forEach(function(stn,i){
         (function(s){
-          stbody.appendChild(el("tr",[
-            el("td",{style:"text-align:center;color:#94a3b8;font-size:11px"},[String(i+1)]),
-            el("td",{style:"text-align:center;font-family:monospace;font-size:11px"},[s.no]),
-            el("td",[s.name]),
-            el("td",{style:"text-align:center;color:#64748b;font-size:11px"},[s.elev||""]),
-            el("td",{style:"text-align:center;color:#64748b;font-size:11px"},[s.type]),
-            el("td",{style:"text-align:center;color:#64748b;font-size:11px"},[s.medium]),
-            el("td",{style:"text-align:center"},[
-              el("button",{cls:"btn-edit",onclick:function(){editStation(s.id);}},["✏ edit"]),
+          var tr=el("tr");
+          tr.setAttribute("data-stn-id",s.id);
+          tr.appendChild(el("td",{style:"text-align:center;color:#94a3b8;font-size:11px"},[String(i+1)]));
+          tr.appendChild(el("td",{style:"text-align:center;font-family:monospace;font-size:11px"},[s.no]));
+          tr.appendChild(el("td",[s.name]));
+          tr.appendChild(el("td",{style:"text-align:center;color:#64748b;font-size:11px"},[s.elev||""]));
+          tr.appendChild(el("td",{style:"text-align:center;color:#64748b;font-size:11px"},[s.type]));
+          tr.appendChild(el("td",{style:"text-align:center;color:#64748b;font-size:11px"},[s.medium]));
+          tr.appendChild(el("td",{style:"text-align:center"},[
+            el("div",{cls:"stn-actions"},[
+              el("button",{cls:"btn-edit",onclick:function(){editStation(s.id);},title:"Edit station"},["✏ edit"]),
               el("button",{cls:"btn-rm",onclick:function(){deleteStation(s.id);}},["✕ remove"])
             ])
           ]));
+          stbody.appendChild(tr);
         })(stn);
       });
       listEl=el("div",{cls:"stn-list"},[
@@ -1203,7 +1640,7 @@ function render(){
             el("th",{style:"text-align:center"},["Elev (m)"]),
             el("th",{style:"text-align:center"},["Type"]),
             el("th",{style:"text-align:center"},["Medium"]),
-            el("th",[""])
+            el("th",["Actions"])
           ])]),
           stbody
         ])
@@ -1334,58 +1771,10 @@ if(checkSession()){
   renderLogin();
 }
 </script>
-
-<!-- ── EDIT STATION MODAL ── -->
-<div id="edit-modal" onclick="if(event.target===this)closeEditModal()">
-  <div class="edit-card">
-    <div class="edit-card-hdr">
-      ✏️ Edit Station
-      <span onclick="closeEditModal()">✕</span>
-    </div>
-    <div class="edit-card-body">
-      <input type="hidden" id="em-id">
-      <div class="edit-row">
-        <div class="edit-fld" style="max-width:130px">
-          <label>Station No.</label>
-          <input id="em-no" type="text" placeholder="e.g. 446.3">
-        </div>
-        <div class="edit-fld">
-          <label>Name / River</label>
-          <input id="em-name" type="text" placeholder="e.g. Trishuli Khola at Dhunche">
-        </div>
-      </div>
-      <div class="edit-row">
-        <div class="edit-fld" style="max-width:130px">
-          <label>Elevation (m)</label>
-          <input id="em-elev" type="text" placeholder="e.g. 1950">
-        </div>
-        <div class="edit-fld">
-          <label>Type</label>
-          <select id="em-type">
-            <option>Manual+Automatic</option>
-            <option>Manual</option>
-            <option>Automatic</option>
-          </select>
-        </div>
-        <div class="edit-fld">
-          <label>Comm. Medium</label>
-          <select id="em-med">
-            <option>GSM</option>
-            <option>Satellite</option>
-            <option>Radio</option>
-            <option>None</option>
-          </select>
-        </div>
-      </div>
-    </div>
-    <div class="edit-card-foot">
-      <button class="btn-cancel-edit" onclick="closeEditModal()">Cancel</button>
-      <button class="btn-save-edit" onclick="saveEditStation()">💾 Save Changes</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>
+
+
 
 
 

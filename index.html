@@ -5,233 +5,357 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RLS Station Daily Status Register — DHM 2026</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: Arial, sans-serif; font-size: 13px; background: #e8edf3; padding: 16px; }
-select, input, button { font-family: Arial, sans-serif; }
+/* ── RESET ── */
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;font-size:13px;background:#e8edf3;padding:16px}
+select,input,button{font-family:inherit}
 
-#app { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.12); }
+/* ── LOGIN ── */
+.login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#0b1e38 0%,#1a3558 55%,#2b4d7c 100%);padding:20px}
+.login-card{width:100%;max-width:420px;background:#fff;border-radius:12px;overflow:hidden;
+  box-shadow:0 12px 50px rgba(0,0,0,0.35)}
+.login-header{background:#1a3558;color:#fff;padding:24px 28px}
+.login-logo{font-size:32px;margin-bottom:8px}
+.login-title{font-size:16px;font-weight:bold;margin-bottom:3px}
+.login-sub{font-size:11px;opacity:0.6;line-height:1.5}
+.login-body{padding:24px 28px}
+.lf{margin-bottom:16px}
+.lf label{display:block;font-size:11px;font-weight:bold;color:#475569;margin-bottom:5px;
+  text-transform:uppercase;letter-spacing:.05em}
+.lf input{width:100%;padding:9px 12px;border:1.5px solid #d1d5db;border-radius:6px;
+  font-size:13px;outline:none;transition:border-color .15s}
+.lf input:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.captcha-box{background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:8px;
+  padding:10px 16px;text-align:center;font-size:22px;font-weight:bold;
+  color:#1a3558;letter-spacing:6px;font-family:monospace;margin-bottom:6px}
+.btn-login{width:100%;padding:11px;background:#1a3558;color:#fff;border:none;
+  border-radius:7px;font-size:14px;font-weight:bold;cursor:pointer;margin-top:4px;
+  transition:background .15s}
+.btn-login:hover{background:#2563eb}
+.login-err{background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;
+  padding:8px 12px;border-radius:5px;font-size:12px;margin-bottom:14px}
+.login-hint{font-size:11px;color:#94a3b8;text-align:center;margin-top:12px}
 
-/* HEADER */
-.header { background: #1a3558; color: #fff; padding: 12px 16px; }
-.header-title { font-size: 14px; font-weight: bold; margin-bottom: 10px; }
-.header-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.ctrl { display: flex; align-items: center; gap: 5px; }
-.ctrl-lbl { font-size: 11px; opacity: 0.7; white-space: nowrap; }
-.hdr-sel { font-size: 12px; padding: 4px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.12); color: #fff; cursor: pointer; }
-.hdr-sel option { color: #000; background: #fff; }
-.hdr-btn { font-size: 11px; padding: 4px 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: #fff; cursor: pointer; white-space: nowrap; }
-.hdr-btn:hover { background: rgba(255,255,255,0.2); }
-.hdr-btn-red { border-color: rgba(255,150,150,0.4); background: rgba(200,40,40,0.2); }
-.hdr-btn-red:hover { background: rgba(200,40,40,0.35); }
-.hdr-btn-active { background: rgba(255,255,255,0.22); font-weight: bold; }
-.manage-btn { margin-left: auto; font-size: 11px; padding: 5px 12px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.35); background: rgba(255,255,255,0.1); color: #fff; cursor: pointer; white-space: nowrap; }
-.manage-btn:hover, .manage-btn.active { background: rgba(255,255,255,0.22); }
+/* ── APP SHELL ── */
+#app{background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.12)}
 
-.sub-panel { margin-top: 10px; background: rgba(0,0,0,0.22); border-radius: 6px; padding: 10px 12px; }
-.sub-panel-row { display: flex; gap: 8px; align-items: center; }
-.sub-panel input { flex: 1; font-size: 12px; padding: 5px 8px; border-radius: 4px; border: none; background: rgba(255,255,255,0.92); color: #000; outline: none; }
-.btn-add { padding: 5px 14px; background: #2563eb; border: none; color: #fff; border-radius: 4px; font-size: 12px; cursor: pointer; }
-.btn-add:hover { background: #1d4ed8; }
-.btn-x { padding: 5px 9px; background: rgba(255,255,255,0.15); border: none; color: #fff; border-radius: 4px; font-size: 12px; cursor: pointer; }
+/* ── HEADER ── */
+.header{background:#1a3558;color:#fff;padding:12px 16px}
+.header-title{font-size:14px;font-weight:bold;margin-bottom:10px}
+.header-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ctrl{display:flex;align-items:center;gap:5px}
+.ctrl-lbl{font-size:11px;opacity:.7;white-space:nowrap}
+.hdr-sel{font-size:12px;padding:4px 6px;border-radius:4px;
+  border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);
+  color:#fff;cursor:pointer}
+.hdr-sel option{color:#000;background:#fff}
+.hdr-btn{font-size:11px;padding:4px 10px;border-radius:4px;
+  border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);
+  color:#fff;cursor:pointer;white-space:nowrap}
+.hdr-btn:hover{background:rgba(255,255,255,.2)}
+.hdr-btn-red{border-color:rgba(255,150,150,.4);background:rgba(200,40,40,.2)}
+.hdr-btn-red:hover{background:rgba(200,40,40,.35)}
+.hdr-btn-active{background:rgba(255,255,255,.22);font-weight:bold}
+.hdr-btn-lock{background:rgba(160,110,0,.3);border-color:rgba(255,200,80,.5);color:#fde68a}
+.hdr-btn-lock:hover{background:rgba(180,130,0,.45)}
+.hdr-btn-locked{background:rgba(160,0,0,.35);border-color:rgba(255,120,120,.5);
+  color:#fca5a5;font-weight:bold}
+.manage-btn{font-size:11px;padding:5px 12px;border-radius:4px;
+  border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.1);
+  color:#fff;cursor:pointer;white-space:nowrap}
+.manage-btn:hover,.manage-btn.active{background:rgba(255,255,255,.22)}
+.user-pill{font-size:11px;padding:3px 10px;border-radius:20px;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+  color:rgba(255,255,255,.85);display:flex;align-items:center;gap:5px}
+.logout-btn{font-size:10px;padding:2px 7px;border-radius:4px;
+  border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);
+  color:rgba(255,255,255,.7);cursor:pointer}
+.logout-btn:hover{background:rgba(180,0,0,.3);color:#fca5a5}
+.sub-panel{margin-top:10px;background:rgba(0,0,0,.22);border-radius:6px;padding:10px 12px}
+.sub-panel-row{display:flex;gap:8px;align-items:center}
+.sub-panel input{flex:1;font-size:12px;padding:5px 8px;border-radius:4px;
+  border:none;background:rgba(255,255,255,.92);color:#000;outline:none}
+.btn-add{padding:5px 14px;background:#2563eb;border:none;color:#fff;
+  border-radius:4px;font-size:12px;cursor:pointer}
+.btn-add:hover{background:#1d4ed8}
+.btn-x{padding:5px 9px;background:rgba(255,255,255,.15);border:none;
+  color:#fff;border-radius:4px;font-size:12px;cursor:pointer}
+.del-panel{margin-top:10px;background:rgba(0,0,0,.22);border-radius:6px;
+  overflow:hidden;border:1px solid rgba(255,120,120,.3)}
+.del-panel-info{font-size:11px;padding:8px 12px;opacity:.7;
+  border-bottom:1px solid rgba(255,255,255,.1)}
+.del-row{display:flex;justify-content:space-between;align-items:center;
+  padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.del-row-name{font-size:12px}
+.del-row-name.current{opacity:.6;font-style:italic}
+.btn-del-off{font-size:11px;padding:3px 10px;border-radius:4px;
+  border:1px solid rgba(255,120,120,.5);background:rgba(200,40,40,.25);
+  color:#fca5a5;cursor:pointer}
+.btn-del-off:hover{background:rgba(200,40,40,.45)}
+.protected-lbl{font-size:10px;opacity:.45;font-style:italic}
 
-.del-panel { margin-top: 10px; background: rgba(0,0,0,0.22); border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,120,120,0.3); }
-.del-panel-info { font-size: 11px; padding: 8px 12px; opacity: 0.7; border-bottom: 1px solid rgba(255,255,255,0.1); }
-.del-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); }
-.del-row-name { font-size: 12px; }
-.del-row-name.current { opacity: 0.6; font-style: italic; }
-.btn-del-off { font-size: 11px; padding: 3px 10px; border-radius: 4px; border: 1px solid rgba(255,120,120,0.5); background: rgba(200,40,40,0.25); color: #fca5a5; cursor: pointer; }
-.btn-del-off:hover { background: rgba(200,40,40,0.45); }
-.protected-lbl { font-size: 10px; opacity: 0.45; font-style: italic; }
+/* ── TOAST ── */
+.toast{padding:8px 14px;border-radius:6px;font-size:12px;margin-bottom:8px;font-weight:bold}
+.toast-ok{background:#f0fdf4;border:1px solid #86efac;color:#15803d}
+.toast-err{background:#fef2f2;border:1px solid #fca5a5;color:#dc2626}
 
-/* TOAST */
-.toast { padding: 8px 14px; border-radius: 6px; font-size: 12px; margin-bottom: 8px; font-weight: bold; }
-.toast-ok { background: #f0fdf4; border: 1px solid #86efac; color: #15803d; }
-.toast-err { background: #fef2f2; border: 1px solid #fca5a5; color: #dc2626; }
+/* ── LEGEND & LOCK BANNER ── */
+.legend{display:flex;flex-wrap:wrap;gap:14px;padding:6px 14px;
+  background:#edf2f7;border-bottom:1px solid #d1dce8;align-items:center}
+.leg-item{display:flex;align-items:center;gap:4px;font-size:11px}
+.leg-code{font-weight:bold;font-size:12px}
+.leg-hint{margin-left:auto;font-size:10px;color:#94a3b8;font-style:italic}
+.lock-banner{background:#fef3c7;border-bottom:2px solid #fbbf24;
+  padding:6px 16px;font-size:12px;color:#92400e;font-weight:bold;
+  display:flex;align-items:center;gap:10px}
 
-/* LEGEND */
-.legend { display: flex; flex-wrap: wrap; gap: 14px; padding: 6px 14px; background: #edf2f7; border-bottom: 1px solid #d1dce8; align-items: center; }
-.leg-item { display: flex; align-items: center; gap: 4px; font-size: 11px; }
-.leg-code { font-weight: bold; font-size: 12px; }
-.leg-hint { margin-left: auto; font-size: 10px; color: #94a3b8; font-style: italic; }
+/* ── MANAGE STATIONS PANEL ── */
+.manage-panel{background:#f8fafc;border-bottom:1px solid #d1dce8;padding:14px 16px}
+.manage-title{font-weight:bold;font-size:13px;color:#1a3558;margin-bottom:12px}
+.manage-title .off{color:#2563eb}
+.manage-title .sub{color:#7c3aed}
+.stn-form{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;
+  background:#fff;padding:10px 12px;border-radius:6px;
+  border:1px solid #e2e8f0;margin-bottom:12px}
+.fld{display:flex;flex-direction:column;gap:3px}
+.fld label{font-size:10px;color:#64748b}
+.fld input,.fld select{font-size:12px;padding:5px 8px;border-radius:4px;
+  border:1px solid #d1d5db;background:#fff;color:#000;outline:none}
+.fld-grow{flex:1;min-width:180px}
+.fld-grow input{width:100%}
+.btn-stn-add{padding:6px 14px;background:#1a3558;color:#fff;border:none;
+  border-radius:4px;font-size:12px;cursor:pointer;font-weight:bold;
+  align-self:flex-end;height:31px}
+.btn-stn-add:hover{background:#2b4d7c}
+.stn-list{max-height:200px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:6px}
+.stn-list table{width:100%;border-collapse:collapse;font-size:12px}
+.stn-list thead th{background:#dce7f0;padding:5px 8px;font-weight:bold;color:#1a3558;
+  border-bottom:1px solid #c4d4e3;font-size:11px;position:sticky;top:0;z-index:1}
+.stn-list tbody td{padding:4px 8px;border-bottom:1px solid #f1f5f9;font-size:12px}
+.stn-list tbody tr:nth-child(even) td{background:#f8fafc}
+.btn-rm{font-size:11px;color:#dc2626;background:none;border:none;cursor:pointer;padding:2px 6px}
+.empty-note{color:#94a3b8;font-size:12px;font-style:italic;padding:8px 0}
 
-/* MANAGE PANEL */
-.manage-panel { background: #f8fafc; border-bottom: 1px solid #d1dce8; padding: 14px 16px; }
-.manage-title { font-weight: bold; font-size: 13px; color: #1a3558; margin-bottom: 12px; }
-.manage-title .off { color: #2563eb; }
-.manage-title .sub { color: #7c3aed; }
-.stn-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; background: #fff; padding: 10px 12px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 12px; }
-.fld { display: flex; flex-direction: column; gap: 3px; }
-.fld label { font-size: 10px; color: #64748b; }
-.fld input, .fld select { font-size: 12px; padding: 5px 8px; border-radius: 4px; border: 1px solid #d1d5db; background: #fff; color: #000; outline: none; }
-.fld-grow { flex: 1; min-width: 180px; }
-.fld-grow input { width: 100%; }
-.btn-stn-add { padding: 6px 14px; background: #1a3558; color: #fff; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold; align-self: flex-end; height: 31px; }
-.btn-stn-add:hover { background: #2b4d7c; }
-.stn-list { max-height: 200px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px; }
-.stn-list table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.stn-list thead th { background: #dce7f0; padding: 5px 8px; font-weight: bold; color: #1a3558; border-bottom: 1px solid #c4d4e3; font-size: 11px; position: sticky; top: 0; z-index: 1; }
-.stn-list tbody td { padding: 4px 8px; border-bottom: 1px solid #f1f5f9; font-size: 12px; }
-.stn-list tbody tr:nth-child(even) td { background: #f8fafc; }
-.btn-rm { font-size: 11px; color: #dc2626; background: none; border: none; cursor: pointer; padding: 2px 6px; }
-.empty-note { color: #94a3b8; font-size: 12px; font-style: italic; padding: 8px 0; }
+/* ── USER MANAGEMENT ── */
+.user-mgmt-panel{background:#f0f7ff;border-bottom:1px solid #bfdbfe;padding:14px 16px}
+.user-form{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;
+  background:#fff;padding:10px 12px;border-radius:6px;
+  border:1px solid #dbeafe;margin-bottom:12px}
+.user-list-wrap{border:1px solid #e2e8f0;border-radius:6px;overflow:hidden}
+.user-list-wrap table{width:100%;border-collapse:collapse;font-size:12px}
+.user-list-wrap thead th{background:#dce7f0;padding:5px 8px;font-weight:bold;
+  color:#1a3558;border-bottom:1px solid #c4d4e3;font-size:11px}
+.user-list-wrap tbody td{padding:5px 8px;border-bottom:1px solid #f1f5f9;font-size:12px;
+  vertical-align:top}
+.user-list-wrap tbody tr:nth-child(even) td{background:#f8fafc}
+.role-pill{display:inline-block;font-size:10px;padding:2px 8px;
+  border-radius:10px;font-weight:bold}
+.role-admin{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.role-de{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0}
+.off-checks{display:flex;flex-wrap:wrap;gap:4px;padding:2px 0}
+.off-checks label{display:flex;align-items:center;gap:3px;font-size:11px;
+  cursor:pointer;background:#f1f5f9;padding:2px 7px;border-radius:4px;
+  border:1px solid #e2e8f0}
+.off-checks label:hover{background:#dce7f0}
+.btn-sm{font-size:11px;padding:3px 8px;border-radius:4px;cursor:pointer;
+  border:1px solid #d1d5db;background:#fff;color:#374151}
+.btn-sm:hover{background:#f1f5f9}
+.btn-sm-red{color:#dc2626;border-color:rgba(220,38,38,.3);background:#fef2f2}
+.btn-sm-red:hover{background:#fee2e2}
+.btn-sm-blue{color:#2563eb;border-color:rgba(37,99,235,.3);background:#eff6ff}
+.btn-sm-blue:hover{background:#dbeafe}
 
-/* STATUS TABLE */
-.tbl-wrap { overflow-x: auto; }
-table.status { border-collapse: collapse; font-size: 11px; }
-table.status th { background: #2b4d7c; color: #fff; padding: 5px 4px; text-align: center; font-size: 11px; border-right: 1px solid rgba(255,255,255,0.15); white-space: nowrap; vertical-align: middle; }
-table.status th.dark { background: #1a3558; }
-table.status th.tleft { text-align: left; padding-left: 8px; }
-table.status th.dim { opacity: 0.25; }
-table.status td { padding: 3px 4px; border-right: 1px solid #e2e8f0; font-size: 11px; vertical-align: middle; }
-table.status tbody tr:nth-child(even) td { background: #f8fafc; }
-table.status td.day { text-align: center; padding: 0; cursor: pointer; user-select: none; width: 26px; height: 22px; font-weight: bold; font-size: 11px; }
-table.status td.day:hover { filter: brightness(0.88); }
-table.status td.grayed { background: #f1f5f9; }
-table.status td.active-days { text-align: center; font-weight: bold; color: #15803d; background: #f0fdf4; }
-table.status td.inactive-days { text-align: center; font-weight: bold; color: #dc2626; background: #fef2f2; }
-table.status td.remarks { padding-left: 6px; color: #94a3b8; }
-table.status tfoot tr td { background: #f8fafc; font-size: 11px; }
-table.status tfoot tr.total td { background: #dce7f0; border-top: 2px solid #2b4d7c; }
-table.status tfoot td.flbl { text-align: right; padding: 4px 10px; font-weight: bold; border-right: 1px solid #e2e8f0; }
-table.status td.no-stn { padding: 30px; text-align: center; color: #94a3b8; font-style: italic; }
+/* ── STATUS TABLE ── */
+.tbl-wrap{overflow-x:auto}
+table.status{border-collapse:collapse;font-size:11px}
+table.status th{background:#2b4d7c;color:#fff;padding:5px 4px;text-align:center;
+  font-size:11px;border-right:1px solid rgba(255,255,255,.15);
+  white-space:nowrap;vertical-align:middle}
+table.status th.dark{background:#1a3558}
+table.status th.tleft{text-align:left;padding-left:8px}
+table.status th.dim{opacity:.25}
+table.status th.m2h{background:#1e3d6a}
+table.status th.msep{border-left:3px solid rgba(255,255,255,.45)!important}
+table.status td{padding:3px 4px;border-right:1px solid #e2e8f0;
+  font-size:11px;vertical-align:middle}
+table.status tbody tr:nth-child(even) td{background:#f8fafc}
+table.status td.day{text-align:center;padding:0;cursor:pointer;
+  user-select:none;width:26px;height:22px;font-weight:bold;font-size:11px}
+table.status td.day:hover:not(.dlocked){filter:brightness(.88)}
+table.status td.dlocked{cursor:not-allowed!important}
+table.status td.grayed{background:#f1f5f9}
+table.status td.active-days{text-align:center;font-weight:bold;
+  color:#15803d;background:#f0fdf4}
+table.status td.inactive-days{text-align:center;font-weight:bold;
+  color:#dc2626;background:#fef2f2}
+table.status tfoot tr td{background:#f8fafc;font-size:11px}
+table.status tfoot tr.total td{background:#dce7f0;border-top:2px solid #2b4d7c}
+table.status tfoot td.flbl{text-align:right;padding:4px 10px;
+  font-weight:bold;border-right:1px solid #e2e8f0}
+table.status td.no-stn{padding:30px;text-align:center;
+  color:#94a3b8;font-style:italic}
+table.status td.msep{border-left:3px solid #9bb5cc!important}
 
+/* ── ANNUAL SUMMARY — VERTICAL 2-COL GRID ── */
+.summary-wrap{padding:12px 14px}
+.sum-action-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+  margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #e2e8f0}
+.sum-info{font-size:11px;color:#64748b;flex:1}
+.btn-dl{font-size:11px;padding:6px 14px;border-radius:5px;border:1px solid #d1d5db;
+  background:#fff;color:#1a3558;cursor:pointer;font-weight:bold;
+  display:flex;align-items:center;gap:5px;white-space:nowrap}
+.btn-dl:hover{background:#eff6ff;border-color:#93c5fd;color:#2563eb}
+.btn-dl-pdf{border-color:#fca5a5;color:#dc2626}
+.btn-dl-pdf:hover{background:#fef2f2;border-color:#f87171}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:900px){.sum-grid{grid-template-columns:1fr}}
+.sum-section{border:1px solid #d1dce8;border-radius:7px;overflow:hidden}
+.sum-sec-hdr{background:#2b4d7c;color:#fff;padding:6px 10px;font-size:12px;
+  font-weight:bold;display:flex;justify-content:space-between;align-items:center}
+.sum-sec-body{overflow-x:auto}
+table.sum-month{border-collapse:collapse;font-size:10px;min-width:100%}
+table.sum-month th{background:#1e3d6a;color:#fff;padding:3px 2px;text-align:center;
+  font-size:9px;border-right:1px solid rgba(255,255,255,.1);white-space:nowrap}
+table.sum-month th.tleft{text-align:left;padding-left:6px}
+table.sum-month td{padding:1px 2px;border-right:1px solid #e8edf3;
+  font-size:10px;vertical-align:middle}
+table.sum-month tbody tr:nth-child(even) td{background:#f8fafc}
+table.sum-month td.mtick{width:13px;height:17px;padding:0;text-align:center;
+  font-size:8px;font-weight:bold;cursor:pointer}
+table.sum-month td.mtick:hover{filter:brightness(.88)}
+table.sum-month td.mcnt{width:22px;text-align:center;font-size:10px;font-weight:bold;padding:2px}
+table.sum-month tfoot td{background:#dce7f0;border-top:1px solid #b0c4d8;
+  font-size:9px;text-align:center;font-weight:bold}
+.no-data-msg{padding:30px;text-align:center;color:#94a3b8;font-style:italic;font-size:12px}
 
-/* GSHEET SYNC */
-#sync-bar { position: fixed; bottom: 12px; right: 14px; z-index: 9999; }
-.sync-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 20px; font-size: 11px; font-family: Arial,sans-serif; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-.sync-ok   { background:#f0fdf4; border:1px solid #86efac; color:#15803d; }
-.sync-save { background:#eff6ff; border:1px solid #93c5fd; color:#1d4ed8; }
-.sync-err  { background:#fef2f2; border:1px solid #fca5a5; color:#dc2626; }
-.sync-init { background:#fefce8; border:1px solid #fde047; color:#92400e; }
-.sync-dot  { width:7px; height:7px; border-radius:50%; background:currentColor; display:inline-block; }
+/* ── STATUS POPUP ── */
+#status-popup{position:fixed;z-index:9998;background:#fff;border:1px solid #d1dce8;
+  border-radius:7px;box-shadow:0 6px 24px rgba(0,0,0,.18);
+  min-width:180px;overflow:hidden;display:none}
+.sp-title{padding:5px 12px;font-size:10px;color:#64748b;background:#f8fafc;
+  border-bottom:1px solid #e2e8f0;font-weight:bold;text-transform:uppercase;
+  letter-spacing:.05em}
+.sp-opt{display:flex;align-items:center;padding:7px 12px;cursor:pointer;
+  gap:8px;font-size:12px;border-bottom:1px solid #f1f5f9;transition:background .1s}
+.sp-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.sp-chk{width:14px;font-size:10px;text-align:center;color:#64748b}
 
-/* FOOTER */
-.footer { padding: 6px 14px; background: #edf2f7; border-top: 1px solid #d1dce8; font-size: 10px; color: #94a3b8; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px; }
-.dev-footer { padding: 5px 14px; background: #1a3558; color: rgba(255,255,255,0.45); font-size: 10px; text-align: right; letter-spacing: 0.03em; border-radius: 0 0 8px 8px; }
+/* ── SYNC / FOOTER / TABS ── */
+#sync-bar{position:fixed;bottom:12px;right:14px;z-index:9999}
+.sync-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;
+  border-radius:20px;font-size:11px;font-weight:bold;
+  box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.sync-ok{background:#f0fdf4;border:1px solid #86efac;color:#15803d}
+.sync-save{background:#eff6ff;border:1px solid #93c5fd;color:#1d4ed8}
+.sync-err{background:#fef2f2;border:1px solid #fca5a5;color:#dc2626}
+.sync-init{background:#fefce8;border:1px solid #fde047;color:#92400e}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+.footer{padding:6px 14px;background:#edf2f7;border-top:1px solid #d1dce8;
+  font-size:10px;color:#94a3b8;display:flex;justify-content:space-between;
+  flex-wrap:wrap;gap:4px}
+.dev-footer{padding:5px 14px;background:#1a3558;color:rgba(255,255,255,.45);
+  font-size:10px;text-align:right;letter-spacing:.03em;border-radius:0 0 8px 8px}
+.tabs{display:flex;background:#162d48;border-bottom:2px solid #2b4d7c}
+.tab{padding:8px 20px;font-size:12px;color:rgba(255,255,255,.55);cursor:pointer;
+  border:none;background:none;border-bottom:2px solid transparent;
+  margin-bottom:-2px;white-space:nowrap}
+.tab:hover{color:rgba(255,255,255,.85)}
+.tab.active{color:#fff;font-weight:bold;border-bottom:2px solid #60a5fa}
 
-/* TABS */
-.tabs { display: flex; background: #162d48; border-bottom: 2px solid #2b4d7c; }
-.tab { padding: 8px 20px; font-size: 12px; color: rgba(255,255,255,0.55); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap; }
-.tab:hover { color: rgba(255,255,255,0.85); }
-.tab.active { color: #fff; font-weight: bold; border-bottom: 2px solid #60a5fa; }
-
-/* SUMMARY */
-.summary-wrap { padding: 12px 14px; }
-.summary-info { font-size: 11px; color: #64748b; margin-bottom: 10px; }
-.sum-tbl-wrap { overflow-x: auto; border: 1px solid #d1dce8; border-radius: 6px; }
-table.sum { border-collapse: collapse; font-size: 11px; }
-table.sum th { background: #2b4d7c; color: #fff; padding: 4px 4px; text-align: center; font-size: 11px; border-right: 1px solid rgba(255,255,255,0.15); white-space: nowrap; vertical-align: middle; }
-table.sum th.tleft { text-align: left; padding-left: 6px; }
-table.sum td { padding: 2px 3px; border-right: 1px solid #e8edf3; font-size: 11px; vertical-align: middle; }
-table.sum tbody tr:nth-child(even) td.sticky-col { background: #f8fafc; }
-table.sum tbody tr:hover td.sticky-col { background: #eff6ff; }
-table.sum td.sticky-col { position: sticky; background: #fff; z-index: 1; border-right: 1px solid #d1dce8; }
-table.sum td.sticky-col.name-col { border-right: 2px solid #c4d4e3; }
-table.sum th.sticky-th { position: sticky; z-index: 3; }
-table.sum tfoot tr td { background: #dce7f0; border-top: 2px solid #2b4d7c; font-size: 11px; }
-table.sum tfoot td.sticky-col { background: #dce7f0; z-index: 1; }
-table.sum td.tick { width: 15px; height: 19px; padding: 0; text-align: center; border-right: 1px solid rgba(210,220,230,0.5); font-size: 9px; font-weight: bold; cursor: default; }
-table.sum td.ann-cnt { width: 28px; text-align: center; font-size: 11px; font-weight: bold; padding: 2px 3px; }
-table.sum td.rmk-cell { min-width: 130px; padding: 2px 4px; }
-table.sum input.rmk-inp { width: 100%; font-size: 11px; padding: 2px 5px; border: 1px solid #e2e8f0; border-radius: 3px; background: #fafafa; outline: none; font-family: Arial,sans-serif; }
-table.sum input.rmk-inp:focus { border-color: #93c5fd; background: #fff; }
-.no-data-msg { padding: 30px; text-align: center; color: #94a3b8; font-style: italic; font-size: 12px; }
+/* ── PRINT ── */
+@media print{
+  body{background:#fff;padding:4px}
+  #sync-bar,#toast,.tabs,.sum-action-bar,.hdr-btn,.manage-btn,.logout-btn{display:none!important}
+  .sum-section{break-inside:avoid;page-break-inside:avoid}
+  .sum-grid{grid-template-columns:1fr 1fr!important}
+  #app{box-shadow:none;border-radius:0}
+}
 </style>
 
+<!-- ═══════════════════════════════════════════
+     GOOGLE SHEETS BACKEND
+═══════════════════════════════════════════ -->
 <script>
-// ══════════════════════════════════════════
-//  Google Sheets Backend
-// ══════════════════════════════════════════
-var GS_URL = "https://script.google.com/macros/s/AKfycbwRW9euFRs7xUtoxJqpqRjeqAjjPZVPrSsp9qT4kQVeXIn3_tI81QZvI91QklI1ZHKeqw/exec";
+var GS_URL="https://script.google.com/macros/s/AKfycbwRW9euFRs7xUtoxJqpqRjeqAjjPZVPrSsp9qT4kQVeXIn3_tI81QZvI91QklI1ZHKeqw/exec";
+var _saveTimer=null,_lastSaved=null;
 
-var _saveTimer  = null;
-var _lastSaved  = null;
-
-function setSyncStatus(type, msg) {
-  var bar = document.getElementById("sync-bar");
-  if (!bar) return;
-  var cls = {ok:"sync-ok",save:"sync-save",err:"sync-err",init:"sync-init"}[type]||"sync-init";
-  bar.innerHTML = '<span class="sync-pill '+cls+'"><span class="sync-dot"></span> '+msg+'</span>';
+function setSyncStatus(type,msg){
+  var bar=document.getElementById("sync-bar");
+  if(!bar)return;
+  var cls={ok:"sync-ok",save:"sync-save",err:"sync-err",init:"sync-init"}[type]||"sync-init";
+  bar.innerHTML='<span class="sync-pill '+cls+'"><span class="sync-dot"></span> '+msg+'</span>';
 }
-
-// Load data from Google Sheet -> localStorage
-function gsLoad(callback) {
-  setSyncStatus("init", "Loading data…");
-  fetch(GS_URL, { method: "GET" })
-  .then(function(r){ return r.json(); })
-  .then(function(data) {
-    if (data && typeof data === "object") {
-      Object.keys(data).forEach(function(k) {
-        try { localStorage.setItem(k, JSON.stringify(data[k])); } catch(e) {}
+function gsLoad(cb){
+  setSyncStatus("init","Loading data…");
+  fetch(GS_URL,{method:"GET"})
+  .then(function(r){return r.json();})
+  .then(function(data){
+    if(data&&typeof data==="object"){
+      Object.keys(data).forEach(function(k){
+        try{localStorage.setItem(k,JSON.stringify(data[k]));}catch(e){}
       });
-      setSyncStatus("ok", "Loaded ✓");
+      setSyncStatus("ok","Loaded ✓");
     }
-    if (callback) callback(true);
+    if(cb)cb(true);
   })
-  .catch(function(e) {
-    setSyncStatus("err", "Load failed — using local data");
-    if (callback) callback(false);
-  });
+  .catch(function(){setSyncStatus("err","Load failed — using local data");if(cb)cb(false);});
 }
-
-// Collect all rls_ keys from localStorage and push to Google Sheet
-function gsSave() {
-  var payload = {};
-  for (var i = 0; i < localStorage.length; i++) {
-    var k = localStorage.key(i);
-    if (k && k.indexOf("rls") === 0) {
-      try { payload[k] = JSON.parse(localStorage.getItem(k)); } catch(e) { payload[k] = localStorage.getItem(k); }
+function gsSave(){
+  var payload={};
+  for(var i=0;i<localStorage.length;i++){
+    var k=localStorage.key(i);
+    if(k&&k.indexOf("rls")===0){
+      try{payload[k]=JSON.parse(localStorage.getItem(k));}catch(e){payload[k]=localStorage.getItem(k);}
     }
   }
-  var json = JSON.stringify(payload);
-  if (json === _lastSaved) return;
-  _lastSaved = json;
-  setSyncStatus("save", "Saving…");
-  fetch(GS_URL, {
-    method: "POST",
-    body: json
-  })
-  .then(function(r){ return r.text(); })
-  .then(function() { setSyncStatus("ok", "Saved to Google Sheet ✓"); })
-  .catch(function(e) { setSyncStatus("err", "Save failed — check connection"); });
+  var json=JSON.stringify(payload);
+  if(json===_lastSaved)return;
+  _lastSaved=json;
+  setSyncStatus("save","Saving…");
+  fetch(GS_URL,{method:"POST",body:json})
+  .then(function(r){return r.text();})
+  .then(function(){setSyncStatus("ok","Saved to Google Sheet ✓");})
+  .catch(function(){setSyncStatus("err","Save failed — check connection");});
 }
-
-// Debounced save — waits 1.5s after last change
-function scheduleSave() {
-  if (_saveTimer) clearTimeout(_saveTimer);
-  _saveTimer = setTimeout(gsSave, 1500);
+function scheduleSave(){
+  if(_saveTimer)clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(gsSave,1500);
 }
-
-// Auto-refresh every 30 seconds
-function startAutoRefresh() {
-  setInterval(function() {
-    if (document.hidden) return;
-    gsLoad(function(ok) {
-      if (ok && window._appRender) window._appRender();
-    });
-  }, 30000);
+function startAutoRefresh(){
+  setInterval(function(){
+    if(document.hidden)return;
+    gsLoad(function(ok){if(ok&&window._appRender)window._appRender();});
+  },30000);
 }
 </script>
-
 </head>
 <body>
 <div id="sync-bar"><span class="sync-pill sync-init"><span class="sync-dot"></span> Starting…</span></div>
-
 <div id="toast"></div>
 <div id="app"></div>
+<div id="status-popup"></div>
 
+<!-- ═══════════════════════════════════════════
+     MAIN APPLICATION
+═══════════════════════════════════════════ -->
 <script>
-const CUR_YEAR = new Date().getFullYear();
-const YEARS = (function(){ var a=[]; for(var y=2020;y<=CUR_YEAR+5;y++) a.push(y); return a; })();
-const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-const SUBTYPES = ["Hydrological Stations","Snow Stations"];
-const TYPES = ["Manual+Automatic","Manual","Automatic"];
-const MEDIUMS = ["GSM","VSAT","Radio","Satellite","N/A"];
-const S_OPTS = ["","A","I","D","F","-"];
-const S_CLR = {A:"#15803d",I:"#dc2626",D:"#7c3aed",F:"#c2410c","-":"#6b7280"};
-const S_BG  = {A:"#f0fdf4",I:"#fef2f2",D:"#faf5ff",F:"#fff7ed","-":"#f9fafb"};
+/* ── CONSTANTS ── */
+var CUR_YEAR=new Date().getFullYear();
+var YEARS=(function(){var a=[];for(var y=2020;y<=CUR_YEAR+5;y++)a.push(y);return a;})();
+var MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+var SUBTYPES=["Hydrological Stations","Snow Stations"];
+var TYPES=["Manual+Automatic","Manual","Automatic"];
+var MEDIUMS=["GSM","VSAT","Radio","Satellite","N/A"];
 
-const DEF_HYDRO = [
+// D (Discontinued) REMOVED — options are now A, I, F, -
+var S_OPTS=["","A","I","F","-"];
+var S_CLR={A:"#15803d",I:"#dc2626",D:"#7c3aed",F:"#c2410c","-":"#6b7280"};
+var S_BG ={A:"#f0fdf4",I:"#fef2f2",D:"#faf5ff",F:"#fff7ed","-":"#f9fafb"};
+var S_LBL={A:"Active",I:"Inactive",F:"Flooded Away","-":"Unchecked","":"Clear/Empty"};
+
+/* ── DEFAULT STATIONS ── */
+var DEF_HYDRO=[
   {id:"dh1",no:"610",name:"Bhote Koshi at Barhbise",type:"Manual+Automatic",medium:"GSM"},
   {id:"dh2",no:"620",name:"Balephi Khola at Jalbire",type:"Manual+Automatic",medium:"GSM"},
   {id:"dh3",no:"625",name:"Sunkoshi River at Dolalghat",type:"Manual+Automatic",medium:"GSM"},
@@ -268,671 +392,938 @@ const DEF_HYDRO = [
   {id:"dh34",no:"670",name:"Dudhkoshi River at Rabuwa Bazar",type:"Manual+Automatic",medium:"GSM"},
   {id:"dh35",no:"680",name:"Sunkoshi River at Kampughat",type:"Manual+Automatic",medium:"GSM"},
   {id:"dh36",no:"669.5",name:"Rawa Khola at Gaikhure",type:"Manual+Automatic",medium:"GSM"},
-  {id:"dh37",no:"600.02",name:"Arun River at Kimathanka",type:"Manual+Automatic",medium:"GSM"},
+  {id:"dh37",no:"600.02",name:"Arun River at Kimathanka",type:"Manual+Automatic",medium:"GSM"}
 ];
 
-// ── helpers ──
-function sk(s) { return s.replace(/[^a-zA-Z0-9]/g,"_"); }
-function dim(m) { return new Date(S.year, MONTHS.indexOf(m)+1, 0).getDate(); }
-function SK(o,s) { return "rls_stn_"+sk(o)+"_"+sk(s); }
-function TK(o,s,m) { return "rls_st_"+sk(o)+"_"+sk(s)+"_"+S.year+"_"+sk(m); }
-function lGet(k) { try { var v=localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch(e) { return null; } }
-function lSet(k,v) {
-  try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {}
-  if (typeof scheduleSave !== "undefined") scheduleSave();
-}
-function lDel(k) { try { localStorage.removeItem(k); } catch(e) {} }
-
-// ── state ──
-var S = {
-  offices: lGet("rls_offices") || ["DHM","OHM Dharan"],
-  office: "DHM",
-  subtype: "Hydrological Stations",
-  month: "March",
-  year: lGet("rls_year") || CUR_YEAR,
-  stns: {},      // SK(o,s) -> array
-  status: {},    // TK(o,s,m) -> {stnId: {day: code}}
-  showManage: false,
-  showAddOff: false,
-  showDelOff: false,
-  view: "status",
-  newOff: "",
-  newNo: "", newName: "", newType: "Manual+Automatic", newMed: "GSM"
+/* ── AUTH ── */
+var AUTH={
+  loggedIn:false,user:null,
+  captchaA:0,captchaB:0,
+  loginUsername:"",loginPassword:"",loginCaptcha:"",loginError:""
 };
 
-function initStns() {
-  S.offices.forEach(function(o) {
-    SUBTYPES.forEach(function(s) {
-      var k = SK(o,s);
-      if (S.stns[k] === undefined) {
-        var saved = lGet(k);
-        S.stns[k] = saved ? saved : (o==="DHM" && s==="Hydrological Stations" ? JSON.parse(JSON.stringify(DEF_HYDRO)) : []);
+function hashPwd(p){return btoa(encodeURIComponent(p+"_rlsdhm_2026"));}
+
+function getUsers(){
+  var u=lGet("rls_users");
+  if(!u||!Array.isArray(u)||u.length===0){
+    u=[{id:"u_admin",username:"admin",pwd:hashPwd("admin2024"),role:"admin",offices:[]}];
+    lSet("rls_users",u);
+  }
+  return u;
+}
+function saveUsers(users){lSet("rls_users",users);}
+
+function checkSession(){
+  try{
+    var sess=JSON.parse(sessionStorage.getItem("rls_session")||"null");
+    if(sess&&sess.userId){
+      var u=getUsers().find(function(x){return x.id===sess.userId;});
+      if(u){AUTH.loggedIn=true;AUTH.user={id:u.id,username:u.username,role:u.role,offices:u.offices||[]};return true;}
+    }
+  }catch(e){}
+  return false;
+}
+
+function doLogin(un,pw,cap){
+  if(parseInt(cap)!==(AUTH.captchaA+AUTH.captchaB)){AUTH.loginError="Security check answer is wrong. Please try again.";return false;}
+  var users=getUsers();
+  var u=users.find(function(x){return x.username===un&&x.pwd===hashPwd(pw);});
+  if(!u){AUTH.loginError="Invalid username or password.";return false;}
+  AUTH.loggedIn=true;AUTH.user={id:u.id,username:u.username,role:u.role,offices:u.offices||[]};
+  AUTH.loginError="";
+  sessionStorage.setItem("rls_session",JSON.stringify({userId:u.id}));
+  return true;
+}
+
+function doLogout(){
+  AUTH.loggedIn=false;AUTH.user=null;AUTH.loginUsername="";AUTH.loginPassword="";
+  AUTH.loginCaptcha="";AUTH.loginError="";
+  sessionStorage.removeItem("rls_session");
+  newCaptcha();renderLogin();
+}
+
+function newCaptcha(){
+  AUTH.captchaA=Math.floor(Math.random()*9)+1;
+  AUTH.captchaB=Math.floor(Math.random()*9)+1;
+}
+
+function getVisibleOffices(){
+  var all=lGet("rls_offices")||["DHM"];
+  if(!AUTH.user||AUTH.user.role==="admin")return all;
+  return all.filter(function(o){return AUTH.user.offices.indexOf(o)>=0;});
+}
+
+/* ── HELPERS ── */
+function sk(s){return s.replace(/[^a-zA-Z0-9]/g,"_");}
+function dim(m){return new Date(S.year,MONTHS.indexOf(m)+1,0).getDate();}
+function SK(o,s){return "rls_stn_"+sk(o)+"_"+sk(s);}
+function TK(o,s,m){return "rls_st_"+sk(o)+"_"+sk(s)+"_"+S.year+"_"+sk(m);}
+function LK(o,s,y,m){return "rls_lock_"+sk(o)+"_"+sk(s)+"_"+y+"_"+sk(m);}
+function lGet(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}}
+function lSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}if(typeof scheduleSave!=="undefined")scheduleSave();}
+function lDel(k){try{localStorage.removeItem(k);}catch(e){}}
+
+function isMonthLocked(month){
+  return lGet(LK(S.office,S.subtype,S.year,month||S.month))===true;
+}
+
+/* ── STATE ── */
+var S={
+  offices:lGet("rls_offices")||["DHM","OHM Dharan"],
+  office:"DHM",subtype:"Hydrological Stations",
+  month:MONTHS[new Date().getMonth()],
+  year:lGet("rls_year")||CUR_YEAR,
+  month2:"",
+  stns:{},status:{},
+  showManage:false,showAddOff:false,showDelOff:false,showUserMgmt:false,
+  view:"status",
+  newOff:"",newNo:"",newName:"",newType:"Manual+Automatic",newMed:"GSM",
+  newUsr:{username:"",password:"",role:"dataentry",offices:{}}
+};
+
+function initStns(){
+  var allOff=lGet("rls_offices")||S.offices;
+  S.offices=allOff;
+  allOff.forEach(function(o){
+    SUBTYPES.forEach(function(s){
+      var k=SK(o,s);
+      if(S.stns[k]===undefined){
+        var saved=lGet(k);
+        S.stns[k]=saved?saved:(o==="DHM"&&s==="Hydrological Stations"?JSON.parse(JSON.stringify(DEF_HYDRO)):[]);
       }
     });
   });
 }
 
-function loadStatus() {
-  var k = TK(S.office, S.subtype, S.month);
-  if (S.status[k] === undefined) {
-    S.status[k] = lGet(k) || {};
+function loadStatus(){
+  var k=TK(S.office,S.subtype,S.month);
+  if(S.status[k]===undefined)S.status[k]=lGet(k)||{};
+  if(S.month2){var k2=TK(S.office,S.subtype,S.month2);if(S.status[k2]===undefined)S.status[k2]=lGet(k2)||{};}
+}
+
+var _toastTimer=null;
+function flash(msg,err){
+  var t=document.getElementById("toast");if(!t)return;
+  t.innerHTML='<div class="toast '+(err?"toast-err":"toast-ok")+'">'+(err?"⚠ ":"✓ ")+msg+'</div>';
+  if(_toastTimer)clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(function(){t.innerHTML="";},2800);
+}
+
+/* ── STATUS OPERATIONS ── */
+function setStatus(stnId,day,newVal,forMonth){
+  var month=forMonth||S.month;
+  if(isMonthLocked(month)){flash("🔒 Month is locked. Ask admin to unlock.",true);return;}
+  var k=TK(S.office,S.subtype,month);
+  if(!S.status[k])S.status[k]={};
+  if(!S.status[k][stnId])S.status[k][stnId]={};
+  var old=S.status[k][stnId][day]||"";
+  // Confirmation when changing to/from A or I
+  if(old&&old!==newVal&&(old==="A"||old==="I"||newVal==="A"||newVal==="I")){
+    var oL=S_LBL[old]||old,nL=S_LBL[newVal]||"Clear";
+    if(!confirm("⚠  Confirm Status Change\n\n  From: "+oL+"\n  To:   "+nL+"\n\n  Day "+day+" — "+month+"\n\nAre you sure you want to make this change?"))return;
   }
-}
-
-var toastTimer = null;
-function flash(msg, err) {
-  var t = document.getElementById("toast");
-  t.innerHTML = '<div class="toast '+(err?"toast-err":"toast-ok")+'">'+(err?"":"✓ ")+msg+'</div>';
-  if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(function(){ t.innerHTML=""; }, 2500);
-}
-
-function cycleStatus(stnId, day) {
-  var k = TK(S.office, S.subtype, S.month);
-  if (!S.status[k]) S.status[k] = {};
-  if (!S.status[k][stnId]) S.status[k][stnId] = {};
-  var cur = S.status[k][stnId][day] || "";
-  var idx = S_OPTS.indexOf(cur);
-  var next = S_OPTS[(idx+1) % S_OPTS.length];
-  S.status[k][stnId][day] = next;
-  lSet(k, S.status[k]);
+  if(newVal===""){delete S.status[k][stnId][day];}else{S.status[k][stnId][day]=newVal;}
+  lSet(k,S.status[k]);
   render();
 }
 
-function addStation() {
-  var no = S.newNo.trim(), name = S.newName.trim();
-  if (!no || !name) { flash("Enter station number and name", true); return; }
-  var k = SK(S.office, S.subtype);
-  var stn = { id: "s"+Date.now(), no: no, name: name, type: S.newType, medium: S.newMed };
-  S.stns[k] = (S.stns[k] || []).concat([stn]);
-  lSet(k, S.stns[k]);
-  S.newNo = ""; S.newName = "";
-  flash('Station "'+name+'" saved');
-  render();
-}
-
-function deleteStation(id) {
-  var k = SK(S.office, S.subtype);
-  S.stns[k] = (S.stns[k] || []).filter(function(s){ return s.id !== id; });
-  lSet(k, S.stns[k]);
-  flash("Station removed");
-  render();
-}
-
-function addOffice() {
-  var name = S.newOff.trim();
-  if (!name) return;
-  if (S.offices.indexOf(name) >= 0) { flash("Office already exists", true); return; }
-  S.offices.push(name);
-  lSet("rls_offices", S.offices);
-  SUBTYPES.forEach(function(s){ S.stns[SK(name,s)] = []; });
-  S.office = name;
-  S.newOff = ""; S.showAddOff = false; S.showDelOff = false;
-  flash('Office "'+name+'" added');
-  render();
-}
-
-function deleteOffice(name) {
-  if (name === "DHM") { flash("Cannot delete the default DHM office", true); return; }
-  if (!confirm('Delete office "'+name+'"?\nAll its stations and status data will be removed.')) return;
-  SUBTYPES.forEach(function(s) {
-    lDel(SK(name,s));
-    delete S.stns[SK(name,s)];
-    MONTHS.forEach(function(m){ lDel(TK(name,s,m)); });
-  });
-  S.offices = S.offices.filter(function(o){ return o !== name; });
-  lSet("rls_offices", S.offices);
-  if (S.office === name) S.office = S.offices[0];
-  S.showDelOff = false;
-  flash('Office "'+name+'" deleted');
-  render();
-}
-
-function getStnStats(id) {
-  var k = TK(S.office, S.subtype, S.month);
-  var st = (S.status[k] && S.status[k][id]) || {};
-  var days = dim(S.month);
-  var r = {A:0,I:0,D:0,F:0};
-  for (var d=1; d<=days; d++) { var v=st[d]||""; if(r[v]!==undefined) r[v]++; }
+function getStnStats(id,forMonth){
+  var month=forMonth||S.month;
+  var k=TK(S.office,S.subtype,month);
+  var st=(S.status[k]&&S.status[k][id])||{};
+  var d=dim(month);var r={A:0,I:0,F:0};
+  for(var day=1;day<=d;day++){var v=st[day]||"";if(r[v]!==undefined)r[v]++;}
   return r;
 }
 
-function getDayTotals(day) {
-  var k = TK(S.office, S.subtype, S.month);
-  var stns = S.stns[SK(S.office, S.subtype)] || [];
-  var r = {A:0,I:0,D:0,F:0,"-":0};
-  stns.forEach(function(stn) {
-    var v = (S.status[k] && S.status[k][stn.id] && S.status[k][stn.id][day]) || "";
-    if (r[v] !== undefined) r[v]++;
+function getDayTotals(day,forMonth){
+  var month=forMonth||S.month;
+  var k=TK(S.office,S.subtype,month);
+  var stns=S.stns[SK(S.office,S.subtype)]||[];
+  var r={A:0,I:0,F:0,"-":0};
+  stns.forEach(function(stn){
+    var v=(S.status[k]&&S.status[k][stn.id]&&S.status[k][stn.id][day])||"";
+    if(r[v]!==undefined)r[v]++;
   });
   return r;
 }
 
-// ── DOM builder ──
-function el(tag, attrs, children) {
-  var elem = document.createElement(tag);
-  if (attrs) {
-    Object.keys(attrs).forEach(function(k) {
-      if (k === "cls") { elem.className = attrs[k]; }
-      else if (k === "style") { elem.style.cssText = attrs[k]; }
-      else if (k === "onclick") { elem.onclick = attrs[k]; }
-      else if (k === "onchange") { elem.onchange = attrs[k]; }
-      else if (k === "oninput") { elem.oninput = attrs[k]; }
-      else if (k === "onkeydown") { elem.onkeydown = attrs[k]; }
-      else { elem.setAttribute(k, attrs[k]); }
+/* ── STATUS POPUP ── */
+function showStatusPopup(e,stnId,day,forMonth){
+  e.stopPropagation();
+  var month=forMonth||S.month;
+  if(isMonthLocked(month)){flash("🔒 "+month+" is locked. Contact admin.",true);return;}
+  var popup=document.getElementById("status-popup");
+  var rect=e.currentTarget.getBoundingClientRect();
+  popup.style.left=Math.min(rect.left,window.innerWidth-200)+"px";
+  popup.style.top=Math.min(rect.bottom+4,window.innerHeight-230)+"px";
+  popup.style.display="block";
+  popup.innerHTML="";
+  var k=TK(S.office,S.subtype,month);
+  var cur=(S.status[k]&&S.status[k][stnId]&&S.status[k][stnId][day])||"";
+  var title=document.createElement("div");
+  title.className="sp-title";
+  title.textContent=month+" · Day "+day;
+  popup.appendChild(title);
+  var opts=[
+    {v:"A",label:"Active",    color:"#15803d",bg:"#f0fdf4"},
+    {v:"I",label:"Inactive",  color:"#dc2626",bg:"#fef2f2"},
+    {v:"F",label:"Flooded Away",color:"#c2410c",bg:"#fff7ed"},
+    {v:"-",label:"Unchecked", color:"#6b7280",bg:"#f9fafb"},
+    {v:"", label:"Clear",     color:"#94a3b8",bg:"#ffffff"}
+  ];
+  opts.forEach(function(opt){
+    var row=document.createElement("div");
+    var isCur=cur===opt.v;
+    row.className="sp-opt";
+    row.style.background=isCur?opt.bg:"#fff";
+    var dot=document.createElement("span");dot.className="sp-dot";dot.style.background=opt.v?opt.color:"#e2e8f0";
+    var chk=document.createElement("span");chk.className="sp-chk";chk.textContent=isCur?"✓":"";
+    var lbl=document.createElement("span");
+    lbl.style.cssText="color:"+opt.color+";font-weight:"+(isCur?"bold":"normal");
+    lbl.innerHTML=opt.v?"<b>"+opt.v+"</b> — "+opt.label:"∅ Clear";
+    row.appendChild(dot);row.appendChild(chk);row.appendChild(lbl);
+    row.onmouseover=function(){this.style.background=opt.bg;};
+    row.onmouseout=function(){this.style.background=isCur?opt.bg:"#fff";};
+    row.onclick=(function(o,m){return function(ev){
+      ev.stopPropagation();
+      setStatus(stnId,day,o,m);
+      popup.style.display="none";
+    };})(opt.v,month);
+    popup.appendChild(row);
+  });
+}
+
+document.addEventListener("click",function(){
+  var p=document.getElementById("status-popup");if(p)p.style.display="none";
+});
+
+/* ── LOCK / UNLOCK ── */
+function lockMonth(){
+  if(!confirm("🔒 Lock "+S.month+" "+S.year+" for "+S.office+"?\n\nAll entries will be READ-ONLY.\nOnly Admin can unlock."))return;
+  lSet(LK(S.office,S.subtype,S.year,S.month),true);
+  flash(S.month+" "+S.year+" is now LOCKED 🔒");render();
+}
+function unlockMonth(){
+  if(!AUTH.user||AUTH.user.role!=="admin"){flash("Only Admin can unlock a month.",true);return;}
+  if(!confirm("🔓 Unlock "+S.month+" "+S.year+" for "+S.office+"?\n\nEntries will become editable again."))return;
+  lSet(LK(S.office,S.subtype,S.year,S.month),false);
+  flash(S.month+" "+S.year+" unlocked 🔓");render();
+}
+
+/* ── STATION OPS ── */
+function addStation(){
+  if(!AUTH.user||AUTH.user.role!=="admin"){flash("Only Admin can add stations.",true);return;}
+  var no=S.newNo.trim(),name=S.newName.trim();
+  if(!no||!name){flash("Enter station number and name",true);return;}
+  var k=SK(S.office,S.subtype);
+  var stn={id:"s"+Date.now(),no:no,name:name,type:S.newType,medium:S.newMed};
+  S.stns[k]=(S.stns[k]||[]).concat([stn]);lSet(k,S.stns[k]);
+  S.newNo="";S.newName="";flash('Station "'+name+'" added');render();
+}
+function deleteStation(id){
+  if(!AUTH.user||AUTH.user.role!=="admin"){flash("Only Admin can remove stations.",true);return;}
+  var k=SK(S.office,S.subtype);
+  S.stns[k]=(S.stns[k]||[]).filter(function(s){return s.id!==id;});lSet(k,S.stns[k]);
+  flash("Station removed");render();
+}
+function addOffice(){
+  if(!AUTH.user||AUTH.user.role!=="admin"){flash("Only Admin can add offices.",true);return;}
+  var name=S.newOff.trim();if(!name)return;
+  var allOff=lGet("rls_offices")||S.offices;
+  if(allOff.indexOf(name)>=0){flash("Office already exists",true);return;}
+  allOff.push(name);lSet("rls_offices",allOff);S.offices=allOff;
+  SUBTYPES.forEach(function(s){S.stns[SK(name,s)]=[];});
+  S.office=name;S.newOff="";S.showAddOff=false;S.showDelOff=false;
+  flash('Office "'+name+'" added');render();
+}
+function deleteOffice(name){
+  if(!AUTH.user||AUTH.user.role!=="admin"){flash("Only Admin can delete offices.",true);return;}
+  if(name==="DHM"){flash("Cannot delete the default DHM office",true);return;}
+  if(!confirm('Delete office "'+name+'"?\nAll its stations and status data will be removed.'))return;
+  SUBTYPES.forEach(function(s){
+    lDel(SK(name,s));delete S.stns[SK(name,s)];
+    MONTHS.forEach(function(m){lDel(TK(name,s,m));});
+  });
+  var allOff=(lGet("rls_offices")||S.offices).filter(function(o){return o!==name;});
+  lSet("rls_offices",allOff);S.offices=allOff;
+  if(S.office===name)S.office=allOff[0];
+  S.showDelOff=false;flash('Office "'+name+'" deleted');render();
+}
+
+/* ── USER MANAGEMENT OPS ── */
+function addUser(){
+  var nu=S.newUsr;
+  if(!nu.username.trim()||!nu.password.trim()){flash("Username and password required",true);return;}
+  var users=getUsers();
+  if(users.find(function(u){return u.username===nu.username.trim();})){flash("Username already exists",true);return;}
+  var selOff=Object.keys(nu.offices).filter(function(o){return nu.offices[o];});
+  users.push({id:"u_"+Date.now(),username:nu.username.trim(),pwd:hashPwd(nu.password.trim()),role:nu.role,offices:selOff});
+  saveUsers(users);S.newUsr={username:"",password:"",role:"dataentry",offices:{}};
+  flash("User '"+nu.username.trim()+"' added");render();
+}
+function deleteUser(id){
+  if(id==="u_admin"){flash("Cannot delete default admin",true);return;}
+  if(AUTH.user&&id===AUTH.user.id){flash("Cannot delete yourself",true);return;}
+  if(!confirm("Delete this user?"))return;
+  saveUsers(getUsers().filter(function(u){return u.id!==id;}));
+  flash("User deleted");render();
+}
+function resetUserPwd(id){
+  var np=prompt("Enter new password:");
+  if(!np||!np.trim())return;
+  var users=getUsers();
+  var u=users.find(function(x){return x.id===id;});
+  if(u){u.pwd=hashPwd(np.trim());saveUsers(users);flash("Password reset for "+u.username);}
+}
+function updateUserOffices(id,checkEl,office){
+  var users=getUsers();
+  var u=users.find(function(x){return x.id===id;});
+  if(!u)return;
+  if(checkEl.checked){if(u.offices.indexOf(office)<0)u.offices.push(office);}
+  else{u.offices=u.offices.filter(function(o){return o!==office;});}
+  saveUsers(users);flash("Offices updated");
+}
+
+/* ── SUMMARY DOWNLOAD ── */
+function downloadSummaryCSV(){
+  var stns=S.stns[SK(S.office,S.subtype)]||[];
+  MONTHS.forEach(function(m){var k=TK(S.office,S.subtype,m);if(S.status[k]===undefined)S.status[k]=lGet(k)||{};});
+  var hdr=["S.N.","Station No.","Station Name"];
+  MONTHS.forEach(function(m){for(var d=1;d<=dim(m);d++)hdr.push(m.substring(0,3)+"-"+d);});
+  hdr=hdr.concat(["Annual A","Annual I","Annual F","Annual -","Remarks"]);
+  var rows=[hdr];
+  stns.forEach(function(stn,idx){
+    var row=[idx+1,stn.no,stn.name];
+    var ann={A:0,I:0,F:0,"-":0};
+    MONTHS.forEach(function(m){
+      var k=TK(S.office,S.subtype,m);var st=(S.status[k]&&S.status[k][stn.id])||{};
+      for(var d=1;d<=dim(m);d++){var v=st[d]||"";row.push(v);if(ann[v]!==undefined)ann[v]++;}
     });
+    row=row.concat([ann.A,ann.I,ann.F,ann["-"]]);
+    row.push(lGet("rls_rmk_"+sk(S.office)+"_"+sk(S.subtype)+"_"+stn.id)||"");
+    rows.push(row);
+  });
+  var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(",");}).join("\n");
+  var a=document.createElement("a");
+  a.href="data:text/csv;charset=utf-8,\uFEFF"+encodeURIComponent(csv);
+  a.download="Annual_Summary_"+sk(S.office)+"_"+S.year+".csv";a.click();
+}
+
+function downloadSummaryPDF(){
+  var stns=S.stns[SK(S.office,S.subtype)]||[];
+  MONTHS.forEach(function(m){var k=TK(S.office,S.subtype,m);if(S.status[k]===undefined)S.status[k]=lGet(k)||{};});
+  var mHdrs=MONTHS.map(function(m){return '<th style="background:#1e3d6a;padding:3px 4px;font-size:10px;white-space:nowrap">'+m.substring(0,3)+'<br><span style="font-size:8px;opacity:.7">A/I/F</span></th>';}).join("");
+  var bodyRows="";
+  stns.forEach(function(stn,idx){
+    var ann={A:0,I:0,F:0};var mCells="";
+    MONTHS.forEach(function(m){
+      var k=TK(S.office,S.subtype,m);var st=(S.status[k]&&S.status[k][stn.id])||{};
+      var c={A:0,I:0,F:0};
+      for(var d=1;d<=dim(m);d++){var v=st[d]||"";if(c[v]!==undefined){c[v]++;ann[v]++;}}
+      var bg=c.A>c.I?"#f0fdf4":(c.I>0?"#fef2f2":"");
+      mCells+='<td style="text-align:center;padding:3px 2px;font-size:10px;background:'+bg+'">'+
+        '<span style="color:#15803d">'+c.A+'</span>'+(c.I?'/<span style="color:#dc2626">'+c.I+'</span>':'/0')+
+        (c.F?'/<span style="color:#c2410c">'+c.F+'</span>':'')+'</td>';
+    });
+    bodyRows+='<tr style="background:'+(idx%2===0?"#fff":"#f8fafc")+'">'+
+      '<td style="padding:3px 5px;text-align:center;color:#94a3b8;font-size:10px">'+(idx+1)+'</td>'+
+      '<td style="padding:3px 5px;font-family:monospace;font-size:10px">'+stn.no+'</td>'+
+      '<td style="padding:3px 6px;font-size:11px">'+stn.name+'</td>'+
+      mCells+
+      '<td style="text-align:center;padding:3px;color:#15803d;font-weight:bold;font-size:11px">'+ann.A+'</td>'+
+      '<td style="text-align:center;padding:3px;color:#dc2626;font-weight:bold;font-size:11px">'+ann.I+'</td>'+
+      '<td style="text-align:center;padding:3px;color:#c2410c;font-weight:bold;font-size:11px">'+ann.F+'</td></tr>';
+  });
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Annual Summary '+S.office+' '+S.year+'</title>'+
+    '<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:11px;padding:10px}'+
+    'h2{font-size:14px;color:#1a3558;margin-bottom:3px}p{font-size:10px;color:#64748b;margin-bottom:8px}'+
+    'table{border-collapse:collapse;width:100%}th{background:#2b4d7c;color:#fff;padding:4px 5px;text-align:center;font-size:10px}'+
+    'td{border-bottom:1px solid #e8edf3;vertical-align:middle}th.tleft,td.tleft{text-align:left}'+
+    '@page{size:A3 landscape;margin:1cm}@media print{body{padding:0}}</style></head>'+
+    '<body><h2>Annual Summary — '+S.office+' / '+S.subtype+'</h2>'+
+    '<p>Year: '+S.year+' &nbsp;·&nbsp; Generated: '+new Date().toLocaleDateString()+'&nbsp;·&nbsp; '+stns.length+' stations</p>'+
+    '<table><thead><tr>'+
+    '<th style="width:28px">#</th><th class="tleft" style="width:55px">Stn No.</th>'+
+    '<th class="tleft" style="min-width:140px">Name / River</th>'+
+    mHdrs+
+    '<th style="color:#4ade80;background:#1a3558">A</th>'+
+    '<th style="color:#f87171;background:#1a3558">I</th>'+
+    '<th style="color:#fb923c;background:#1a3558">F</th></tr></thead>'+
+    '<tbody>'+bodyRows+'</tbody></table>'+
+    '<script>setTimeout(function(){window.print();},400);<\/script></body></html>';
+  var w=window.open("","_blank","width=1300,height=750");
+  if(w){w.document.write(html);w.document.close();}
+  else flash("Popup blocked — allow popups to print PDF",true);
+}
+
+/* ── DOM BUILDER ── */
+function el(tag,attrs,children){
+  var elem=document.createElement(tag);
+  if(attrs){
+    if(Array.isArray(attrs)){children=attrs;attrs=null;}
+    else{
+      Object.keys(attrs).forEach(function(k){
+        if(k==="cls")elem.className=attrs[k];
+        else if(k==="style")elem.style.cssText=attrs[k];
+        else if(k==="onclick")elem.onclick=attrs[k];
+        else if(k==="onchange")elem.onchange=attrs[k];
+        else if(k==="oninput")elem.oninput=attrs[k];
+        else if(k==="onkeydown")elem.onkeydown=attrs[k];
+        else elem.setAttribute(k,attrs[k]);
+      });
+    }
   }
-  if (children) {
-    children.forEach(function(c) {
-      if (c === null || c === undefined) return;
-      if (typeof c === "string") elem.appendChild(document.createTextNode(c));
+  if(children){
+    (Array.isArray(children)?children:[children]).forEach(function(c){
+      if(c==null)return;
+      if(typeof c==="string"||typeof c==="number")elem.appendChild(document.createTextNode(String(c)));
       else elem.appendChild(c);
     });
   }
   return elem;
 }
-
-function txt(s) { return document.createTextNode(s); }
-
-function mkSel(opts, val, cls, onchange) {
-  var s = el("select", {cls: cls, onchange: onchange});
-  opts.forEach(function(o) {
-    var op = el("option", {value: o}, [o]);
-    if (o === val) op.selected = true;
-    s.appendChild(op);
+function txt(s){return document.createTextNode(s);}
+function mkSel(opts,val,cls,onchange){
+  var s=el("select",{cls:cls,onchange:onchange});
+  opts.forEach(function(o){
+    var v=typeof o==="object"?o.value:o,l=typeof o==="object"?o.label:o;
+    var op=el("option",{value:v},[l]);if(v===val)op.selected=true;s.appendChild(op);
   });
   return s;
 }
 
-function renderSummary(app) {
-  var stns = S.stns[SK(S.office, S.subtype)] || [];
-
-  // Load all months
-  MONTHS.forEach(function(m) {
-    var k = TK(S.office, S.subtype, m);
-    if (S.status[k] === undefined) S.status[k] = lGet(k) || {};
-  });
-
-  function rmkKey(id) { return "rls_rmk_"+sk(S.office)+"_"+sk(S.subtype)+"_"+id; }
-
-  var wrap = el("div", {cls:"summary-wrap"});
-  wrap.appendChild(el("div",{cls:"summary-info"},[
-    "Annual summary — ", el("b",{},[S.office]), " / ", el("b",{},[S.subtype]),
-    " · "+S.year+" · Click any day cell to edit status · Remarks auto-saved"
+/* ── RENDER LOGIN ── */
+function renderLogin(){
+  document.body.style.padding="0";
+  var appEl=document.getElementById("app");
+  appEl.style.cssText="background:none;box-shadow:none;border-radius:0;overflow:visible";
+  appEl.innerHTML="";
+  var wrap=el("div",{cls:"login-page"});
+  var card=el("div",{cls:"login-card"});
+  card.appendChild(el("div",{cls:"login-header"},[
+    el("div",{cls:"login-logo"},["🌊"]),
+    el("div",{cls:"login-title"},["DHM RLS Station Daily Status Register"]),
+    el("div",{cls:"login-sub"},["Department of Hydrology & Meteorology · Nepal\nSecure access — authorised users only"])
   ]));
-
-  if (stns.length === 0) {
-    wrap.appendChild(el("div",{cls:"no-data-msg"},["No stations. Go to Daily Status tab and add stations first."]));
-    app.appendChild(wrap); return;
-  }
-
-  var tbl = el("table",{cls:"sum"});
-
-  // ── HEADER ROW 1: Month names spanning day columns ──
-  var hr1 = el("tr");
-  hr1.appendChild(el("th",{cls:"tleft sticky-th",style:"width:26px;left:0;background:#2b4d7c"},["#"]));
-  hr1.appendChild(el("th",{cls:"tleft sticky-th",style:"width:50px;left:26px;background:#2b4d7c"},["No."]));
-  hr1.appendChild(el("th",{cls:"tleft sticky-th",style:"min-width:140px;left:76px;background:#2b4d7c"},["Name / River"]));
-  MONTHS.forEach(function(m) {
-    var d = dim(m);
-    var th = el("th",{colspan:String(d),style:"background:#1e3d6a;padding:4px 6px;border-right:2px solid rgba(255,255,255,0.25)"},[m+" ("+d+"d)"]);
-    hr1.appendChild(th);
-  });
-  hr1.appendChild(el("th",{colspan:"5",style:"background:#122844;border-left:2px solid rgba(255,255,255,0.2)"},["Annual Count"]));
-  hr1.appendChild(el("th",{style:"background:#162d48;text-align:left;padding-left:6px;min-width:130px"},["Remarks"]));
-
-  // ── HEADER ROW 2: Day numbers 1-N under each month ──
-  var hr2 = el("tr",{style:"background:#253f62"});
-  var fixSt = "background:#253f62;font-size:9px;padding:2px 2px;border-bottom:1px solid rgba(255,255,255,0.15);";
-  hr2.appendChild(el("th",{cls:"sticky-th",style:"left:0;"+fixSt},[""]));
-  hr2.appendChild(el("th",{cls:"sticky-th",style:"left:26px;"+fixSt},[""]));
-  hr2.appendChild(el("th",{cls:"sticky-th",style:"left:76px;border-right:2px solid rgba(255,255,255,0.3);"+fixSt},[""]));
-  MONTHS.forEach(function(m) {
-    var d = dim(m);
-    for (var day=1; day<=d; day++) {
-      var isLast = day === d;
-      hr2.appendChild(el("th",{style:"width:15px;padding:2px 1px;font-size:9px;font-weight:normal;"+(isLast?"border-right:2px solid rgba(255,255,255,0.25);":"")},[String(day)]));
-    }
-  });
-  [["A","#4ade80"],["I","#f87171"],["D","#c084fc"],["F","#fb923c"],["-","#94a3b8"]].forEach(function(p){
-    hr2.appendChild(el("th",{style:"width:28px;font-size:10px;font-weight:bold;color:"+p[1]+";background:#1a3558;padding:2px 3px;border-left:1px solid rgba(255,255,255,0.1)"},[p[0]]));
-  });
-  hr2.appendChild(el("th",{style:"background:#162d48;border-left:2px solid rgba(255,255,255,0.2)"},[""]));
-
-  tbl.appendChild(el("thead",{},[hr1,hr2]));
-
-  // ── BODY ──
-  var tbody = el("tbody");
-  stns.forEach(function(stn, idx) {
-    var tr = el("tr");
-    var bg = idx%2===0 ? "#fff" : "#f8fafc";
-
-    tr.appendChild(el("td",{cls:"sticky-col",style:"left:0;text-align:center;color:#94a3b8;font-size:11px;background:"+bg},[String(idx+1)]));
-    tr.appendChild(el("td",{cls:"sticky-col",style:"left:26px;text-align:center;font-family:monospace;font-size:11px;padding:3px 4px;background:"+bg},[stn.no]));
-    var nameTd = el("td",{cls:"sticky-col name-col",style:"left:76px;font-size:11px;white-space:nowrap;overflow:hidden;max-width:140px;padding:3px 6px;background:"+bg});
-    nameTd.title = stn.name; nameTd.textContent = stn.name;
-    tr.appendChild(nameTd);
-
-    var annual = {A:0,I:0,D:0,F:0,"-":0};
-
-    MONTHS.forEach(function(m) {
-      var k = TK(S.office, S.subtype, m);
-      var stnSt = (S.status[k] && S.status[k][stn.id]) || {};
-      var d = dim(m);
-      for (var day=1; day<=d; day++) {
-        var v = stnSt[day] || "";
-        var isLast = day === d;
-        var td = el("td",{cls:"tick"});
-        td.style.borderRight = isLast ? "2px solid #c4d4e3" : "1px solid rgba(210,220,230,0.5)";
-        if (v) {
-          td.style.background = S_BG[v];
-          td.style.color = S_CLR[v];
-          td.textContent = v;
-          if (annual[v] !== undefined) annual[v]++;
-        }
-        td.title = m+" Day "+day+(v?" : "+v:" : empty");
-        // Click to cycle (navigates to that month in Daily Status)
-        (function(month){ td.onclick = function(){ S.month=month; S.view="status"; render(); }; })(m);
-        td.style.cursor = "pointer";
-        tr.appendChild(td);
-      }
-    });
-
-    // Annual counts A I D F -
-    [["A","#15803d","#f0fdf4"],["I","#dc2626","#fef2f2"],["D","#7c3aed",""],["F","#c2410c",""],["–","-","#6b7280",""]].forEach(function(p) {
-      var code = p[0]==="–" ? "-" : p[0];
-      var clr = p[1]; var bgc = p[2]||"";
-      var cnt = annual[code]||0;
-      var td = el("td",{cls:"ann-cnt"});
-      if (bgc) td.style.background = bgc;
-      td.style.color = cnt>0 ? clr : "#d1d5db";
-      td.style.borderLeft = p[0]==="A" ? "2px solid #c4d4e3" : "";
-      td.textContent = cnt>0 ? String(cnt) : "";
-      tr.appendChild(td);
-    });
-
-    // Remarks
-    var savedRmk = lGet(rmkKey(stn.id)) || "";
-    var rmkInp = el("input",{type:"text",cls:"rmk-inp",placeholder:"remarks..."});
-    rmkInp.value = savedRmk;
-    (function(id){ rmkInp.onchange = function(){ lSet(rmkKey(id), this.value); flash("Remark saved"); }; })(stn.id);
-    var rmkTd = el("td",{cls:"rmk-cell",style:"border-left:2px solid #c4d4e3"},[rmkInp]);
-    tr.appendChild(rmkTd);
-
-    tbody.appendChild(tr);
-  });
-  tbl.appendChild(tbody);
-
-  // ── FOOTER: per-day totals ──
-  var tfoot = el("tfoot");
-  var fRow = el("tr");
-  var fBase = "font-weight:bold;color:#1a3558;padding:4px 6px;font-size:10px;";
-  var fSticky = fBase+"position:sticky;z-index:1;background:#dce7f0;";
-  fRow.appendChild(el("td",{cls:"sticky-col",style:"left:0;"+fSticky},[""]));
-  fRow.appendChild(el("td",{cls:"sticky-col",style:"left:26px;"+fSticky},[""]));
-  var lblTd = el("td",{cls:"sticky-col name-col",style:"left:76px;text-align:right;"+fSticky},["Monthly Total"]);
-  fRow.appendChild(lblTd);
-
-  MONTHS.forEach(function(m) {
-    var k = TK(S.office, S.subtype, m);
-    var d = dim(m);
-    for (var day=1; day<=d; day++) {
-      var counts = {A:0,I:0,D:0,F:0,"-":0};
-      stns.forEach(function(stn){
-        var v=(S.status[k]&&S.status[k][stn.id]&&S.status[k][stn.id][day])||"";
-        if(counts[v]!==undefined) counts[v]++;
-      });
-      var isLast = day===d;
-      var td = el("td",{cls:"tick"});
-      td.style.borderRight = isLast ? "2px solid #c4d4e3" : "1px solid rgba(210,220,230,0.5)";
-      td.style.background = "#dce7f0";
-      td.title = m+" Day "+day+" — A:"+counts.A+" I:"+counts.I+" D:"+counts.D+" F:"+counts.F;
-      var total = counts.A+counts.I+counts.D+counts.F+counts["-"];
-      if (total > 0) {
-        var dom="A", max=0;
-        ["A","I","D","F","-"].forEach(function(c){ if(counts[c]>max){max=counts[c];dom=c;} });
-        td.style.background = S_BG[dom];
-        td.style.color = S_CLR[dom];
-        td.style.fontWeight = "bold";
-        td.textContent = String(max);
-      }
-      fRow.appendChild(td);
-    }
-  });
-
-  // Annual total counts in footer
-  var grandTotal = {A:0,I:0,D:0,F:0,"-":0};
-  MONTHS.forEach(function(m){
-    var k=TK(S.office,S.subtype,m); var d=dim(m);
-    stns.forEach(function(stn){
-      for(var day=1;day<=d;day++){
-        var v=(S.status[k]&&S.status[k][stn.id]&&S.status[k][stn.id][day])||"";
-        if(grandTotal[v]!==undefined) grandTotal[v]++;
-      }
-    });
-  });
-  [["A","#15803d","#f0fdf4"],["I","#dc2626","#fef2f2"],["D","#7c3aed",""],["F","#c2410c",""],["–","-","#6b7280",""]].forEach(function(p){
-    var code=p[0]==="–"?"-":p[0]; var clr=p[1]; var bgc=p[2]||"#dce7f0";
-    var cnt=grandTotal[code]||0;
-    var td=el("td",{cls:"ann-cnt"});
-    td.style.background=bgc||"#dce7f0";
-    td.style.color=cnt>0?clr:"#94a3b8";
-    td.style.fontWeight="bold";
-    td.style.borderLeft=code==="A"?"2px solid #c4d4e3":"";
-    td.textContent=cnt>0?String(cnt):"0";
-    fRow.appendChild(td);
-  });
-  fRow.appendChild(el("td",{style:"background:#dce7f0;border-left:2px solid #c4d4e3"}));
-  tfoot.appendChild(fRow);
-  tbl.appendChild(tfoot);
-
-  wrap.appendChild(el("div",{cls:"sum-tbl-wrap"},[tbl]));
-  app.appendChild(wrap);
+  var body=el("div",{cls:"login-body"});
+  if(AUTH.loginError)body.appendChild(el("div",{cls:"login-err"},[AUTH.loginError]));
+  var unI=el("input",{type:"text",placeholder:"Enter username",value:AUTH.loginUsername,
+    oninput:function(){AUTH.loginUsername=this.value;},
+    onkeydown:function(e){if(e.key==="Enter")attemptLogin();}});
+  var pwI=el("input",{type:"password",placeholder:"Enter password",value:AUTH.loginPassword,
+    oninput:function(){AUTH.loginPassword=this.value;},
+    onkeydown:function(e){if(e.key==="Enter")attemptLogin();}});
+  var capI=el("input",{type:"number",placeholder:"Your answer",value:AUTH.loginCaptcha,
+    style:"width:100%;text-align:center;font-size:16px;font-weight:bold;letter-spacing:2px",
+    oninput:function(){AUTH.loginCaptcha=this.value;},
+    onkeydown:function(e){if(e.key==="Enter")attemptLogin();}});
+  body.appendChild(el("div",{cls:"lf"},[el("label",[txt("Username")]),unI]));
+  body.appendChild(el("div",{cls:"lf"},[el("label",[txt("Password")]),pwI]));
+  body.appendChild(el("div",{cls:"lf"},[
+    el("label",[txt("Security Check")]),
+    el("div",{cls:"captcha-box"},[AUTH.captchaA+"  +  "+AUTH.captchaB+"  =  ?"]),
+    capI
+  ]));
+  body.appendChild(el("button",{cls:"btn-login",onclick:attemptLogin},["Sign In →"]));
+  body.appendChild(el("div",{cls:"login-hint"},["Default admin login:  admin  /  admin2024"]));
+  card.appendChild(body);wrap.appendChild(card);appEl.appendChild(wrap);
+  setTimeout(function(){unI.focus();},60);
 }
 
-// ── RENDER ──
-function render() {
-  initStns();
-  loadStatus();
+function attemptLogin(){
+  if(doLogin(AUTH.loginUsername,AUTH.loginPassword,AUTH.loginCaptcha)){
+    document.body.style.padding="16px";
+    var appEl=document.getElementById("app");
+    appEl.style.cssText="";
+    if(typeof gsLoad!=="undefined"){
+      gsLoad(function(){render();if(typeof startAutoRefresh!=="undefined")startAutoRefresh();});
+    }else{render();}
+  }else{newCaptcha();AUTH.loginCaptcha="";renderLogin();}
+}
 
-  var stns = S.stns[SK(S.office, S.subtype)] || [];
-  var curK = TK(S.office, S.subtype, S.month);
-  var curSt = S.status[curK] || {};
-  var days = dim(S.month);
+/* ── RENDER USER PANEL ── */
+function renderUserPanel(app){
+  if(!AUTH.user||AUTH.user.role!=="admin")return;
+  var allOffices=lGet("rls_offices")||S.offices;
+  var users=getUsers();
+  var panel=el("div",{cls:"user-mgmt-panel"});
+  panel.appendChild(el("div",{cls:"manage-title"},["👥 User Management — Roles & Office Assignment"]));
 
-  var app = document.getElementById("app");
-  app.innerHTML = "";
+  // Add user form
+  var nu=S.newUsr;
+  var unI=el("input",{type:"text",placeholder:"Username",value:nu.username,
+    oninput:function(){S.newUsr.username=this.value;}});
+  var pwI=el("input",{type:"password",placeholder:"Password",value:nu.password,
+    oninput:function(){S.newUsr.password=this.value;}});
+  var roleS=mkSel(
+    [{value:"dataentry",label:"Data Entry"},{value:"admin",label:"Admin"}],
+    nu.role,"",
+    function(){S.newUsr.role=this.value;render();}
+  );
+  var offChecks=el("div",{cls:"off-checks"});
+  allOffices.forEach(function(o){
+    var chk=el("input",{type:"checkbox"});chk.checked=!!nu.offices[o];
+    (function(off){chk.onchange=function(){S.newUsr.offices[off]=this.checked;};})(o);
+    offChecks.appendChild(el("label",[chk,txt(" "+o)]));
+  });
+  panel.appendChild(el("div",{cls:"user-form"},[
+    el("div",{cls:"fld"},[el("label",[txt("Username")]),unI]),
+    el("div",{cls:"fld"},[el("label",[txt("Password")]),pwI]),
+    el("div",{cls:"fld"},[el("label",[txt("Role")]),roleS]),
+    el("div",{cls:"fld"},[
+      el("label",[txt("Assign Offices")]),
+      nu.role==="admin"
+        ?el("span",{style:"font-size:11px;color:#64748b;padding-top:5px;display:block"},["Admin can access all offices"])
+        :offChecks
+    ]),
+    el("button",{cls:"btn-stn-add",onclick:addUser},["+ Add User"])
+  ]));
 
-  // ── HEADER ──
-  var offSel = mkSel(S.offices, S.office, "hdr-sel", function(){ S.office=this.value; render(); });
-  var subSel = mkSel(SUBTYPES, S.subtype, "hdr-sel", function(){ S.subtype=this.value; render(); });
-  var monSel = mkSel(MONTHS, S.month, "hdr-sel", function(){ S.month=this.value; render(); });
+  // Users list
+  var tbody=el("tbody");
+  users.forEach(function(u){
+    var isMe=AUTH.user.id===u.id;
+    var offEdit=el("div",{cls:"off-checks"});
+    if(u.role!=="admin"){
+      allOffices.forEach(function(o){
+        var chk=el("input",{type:"checkbox"});
+        chk.checked=!!(u.offices&&u.offices.indexOf(o)>=0);
+        (function(uid,off,c){c.onchange=function(){updateUserOffices(uid,c,off);};})(u.id,o,chk);
+        offEdit.appendChild(el("label",[chk,txt(" "+o)]));
+      });
+    }else{
+      offEdit=el("span",{style:"font-size:11px;color:#64748b;font-style:italic"},["All offices"]);
+    }
+    var actTd=el("td",{style:"text-align:center;white-space:nowrap"});
+    if(!(u.id==="u_admin"&&isMe)){
+      if(!isMe)actTd.appendChild(el("button",{cls:"btn-sm btn-sm-red",style:"margin-right:4px",
+        onclick:(function(id){return function(){deleteUser(id);};})(u.id)},["✕ Del"]));
+      actTd.appendChild(el("button",{cls:"btn-sm btn-sm-blue",
+        onclick:(function(id){return function(){resetUserPwd(id);};})(u.id)},["🔑 Reset Pwd"]));
+    }
+    tbody.appendChild(el("tr",[
+      el("td",{style:"font-weight:bold"},[u.username+(isMe?" 👤":""),(u.id==="u_admin"?el("span",{style:"font-size:10px;color:#94a3b8;margin-left:4px"},["(default)"]):"")]),
+      el("td",{style:"text-align:center"},[el("span",{cls:"role-pill "+(u.role==="admin"?"role-admin":"role-de")},[u.role==="admin"?"Admin":"Data Entry"])]),
+      el("td",[offEdit]),
+      actTd
+    ]));
+  });
+  panel.appendChild(el("div",{cls:"user-list-wrap"},[
+    el("table",[
+      el("thead",[el("tr",[
+        el("th",{style:"text-align:left"},["Username"]),
+        el("th",["Role"]),
+        el("th",{style:"text-align:left"},["Assigned Offices"]),
+        el("th",["Actions"])
+      ])]),
+      tbody
+    ])
+  ]));
+  app.appendChild(panel);
+}
 
-  var addOffBtn = el("button", {
-    cls: "hdr-btn"+(S.showAddOff?" hdr-btn-active":""),
-    onclick: function(){ S.showAddOff=!S.showAddOff; S.showDelOff=false; render(); }
-  }, ["+ Add Office"]);
+/* ── BUILD MONTH SECTION (for Annual Summary) ── */
+function buildMonthSection(month,stns){
+  var k=TK(S.office,S.subtype,month);
+  if(S.status[k]===undefined)S.status[k]=lGet(k)||{};
+  var d=dim(month);
+  var locked=isMonthLocked(month);
+  var section=el("div",{cls:"sum-section"});
+  section.appendChild(el("div",{cls:"sum-sec-hdr"},[
+    el("span",[month+" "+S.year]),
+    el("span",{style:"font-size:10px;opacity:.75"},[d+" days"+(locked?" · 🔒":"")])
+  ]));
+  var tbl=el("table",{cls:"sum-month"});
+  // Header
+  var hr=el("tr");
+  hr.appendChild(el("th",{cls:"tleft",style:"width:20px"},["#"]));
+  hr.appendChild(el("th",{cls:"tleft",style:"min-width:100px"},["Station"]));
+  for(var i=1;i<=d;i++)hr.appendChild(el("th",[String(i)]));
+  hr.appendChild(el("th",{style:"color:#4ade80"},["A"]));
+  hr.appendChild(el("th",{style:"color:#f87171"},["I"]));
+  hr.appendChild(el("th",{style:"color:#fb923c"},["F"]));
+  tbl.appendChild(el("thead",[hr]));
+  // Body
+  var tbody=el("tbody");
+  stns.forEach(function(stn,idx){
+    var stnSt=(S.status[k]&&S.status[k][stn.id])||{};
+    var tr=el("tr");
+    tr.appendChild(el("td",{style:"text-align:center;color:#94a3b8;padding:2px 3px"},[String(idx+1)]));
+    var nc=el("td",{style:"padding:2px 6px;white-space:nowrap;overflow:hidden;max-width:100px;font-size:10px"});
+    nc.title=stn.name+" ("+stn.no+")";nc.textContent=stn.no+" "+stn.name;tr.appendChild(nc);
+    var cnt={A:0,I:0,F:0};
+    for(var day=1;day<=d;day++){
+      (function(dy){
+        var v=stnSt[dy]||"";
+        var td=el("td",{cls:"mtick"});
+        if(v&&S_BG[v]){td.style.background=S_BG[v];td.style.color=S_CLR[v];td.textContent=v;if(cnt[v]!==undefined)cnt[v]++;}
+        td.title=month+" Day "+dy+(v?" : "+(S_LBL[v]||v):" : empty");
+        if(!locked){(function(id,m){td.onclick=function(e){showStatusPopup(e,id,dy,m);};})(stn.id,month);}
+        else{td.style.cursor="not-allowed";td.title+=" [LOCKED]";}
+        tr.appendChild(td);
+      })(day);
+    }
+    tr.appendChild(el("td",{cls:"mcnt",style:"color:#15803d"},[cnt.A||""]));
+    tr.appendChild(el("td",{cls:"mcnt",style:"color:#dc2626"},[cnt.I||""]));
+    tr.appendChild(el("td",{cls:"mcnt",style:"color:#c2410c"},[cnt.F||""]));
+    tbody.appendChild(tr);
+  });
+  // Footer: day totals
+  var fr=el("tr");
+  fr.appendChild(el("td",{style:"background:#dce7f0"},[""]));
+  fr.appendChild(el("td",{style:"background:#dce7f0;font-weight:bold;padding:2px 6px;font-size:9px;color:#1a3558"},["Day Total"]));
+  for(var day=1;day<=d;day++){
+    var dt={A:0,I:0,F:0};
+    stns.forEach(function(stn){var v=(S.status[k]&&S.status[k][stn.id]&&S.status[k][stn.id][day])||"";if(dt[v]!==undefined)dt[v]++;});
+    var tdF=el("td",{style:"text-align:center;background:#dce7f0;font-size:9px"});
+    var dom="A",mx=0;
+    Object.keys(dt).forEach(function(c){if(dt[c]>mx){mx=dt[c];dom=c;}});
+    if(mx>0){tdF.style.color=S_CLR[dom];tdF.style.fontWeight="bold";tdF.textContent=String(mx);}
+    fr.appendChild(tdF);
+  }
+  fr.appendChild(el("td",{style:"background:#dce7f0"},[""]));
+  fr.appendChild(el("td",{style:"background:#dce7f0"},[""]));
+  fr.appendChild(el("td",{style:"background:#dce7f0"},[""]));
+  tbl.appendChild(tbody);tbl.appendChild(el("tfoot",[fr]));
+  section.appendChild(el("div",{cls:"sum-sec-body"},[tbl]));
+  return section;
+}
 
-  var delOffBtn = el("button", {
-    cls: "hdr-btn hdr-btn-red"+(S.showDelOff?" hdr-btn-active":""),
-    onclick: function(){ S.showDelOff=!S.showDelOff; S.showAddOff=false; render(); }
-  }, ["🗑 Delete Office"]);
+/* ── RENDER ANNUAL SUMMARY ── */
+function renderSummary(app){
+  var stns=S.stns[SK(S.office,S.subtype)]||[];
+  var wrap=el("div",{cls:"summary-wrap"});
+  // Action bar
+  var bar=el("div",{cls:"sum-action-bar"});
+  bar.appendChild(el("div",{cls:"sum-info"},[
+    txt("Annual summary — "),el("b",[S.office]),txt(" / "),el("b",[S.subtype]),txt(" · "+S.year+" · "+stns.length+" stations")
+  ]));
+  bar.appendChild(el("button",{cls:"btn-dl",onclick:downloadSummaryCSV},["⬇ Download CSV"]));
+  bar.appendChild(el("button",{cls:"btn-dl btn-dl-pdf",onclick:downloadSummaryPDF},["🖨 Print / Save PDF"]));
+  wrap.appendChild(bar);
+  if(stns.length===0){wrap.appendChild(el("div",{cls:"no-data-msg"},["No stations added yet."]));app.appendChild(wrap);return;}
+  // 2-column grid of 12 month sections
+  var grid=el("div",{cls:"sum-grid"});
+  MONTHS.forEach(function(m){grid.appendChild(buildMonthSection(m,stns));});
+  wrap.appendChild(grid);app.appendChild(wrap);
+}
 
-  var manBtn = el("button", {
-    cls: "manage-btn"+(S.showManage?" active":""),
-    onclick: function(){ S.showManage=!S.showManage; render(); }
-  }, ["⚙ Manage Stations ("+stns.length+")"]);
+/* ════════════════════════════════════════
+   MAIN RENDER
+════════════════════════════════════════ */
+function render(){
+  if(!AUTH.loggedIn){renderLogin();return;}
+  document.body.style.padding="16px";
+  var appEl=document.getElementById("app");
+  appEl.style.cssText="";
+  initStns();loadStatus();
 
-  var headerChildren = [
-    el("div", {cls:"header-title"}, ["DHM RLS Station Daily Status Register"]),
-    el("div", {cls:"header-row"}, [
-      el("div", {cls:"ctrl"}, [el("span",{cls:"ctrl-lbl"},["Year:"]),
-        mkSel(YEARS.map(String), String(S.year), "hdr-sel", function(){ S.year=parseInt(this.value); S.status={}; lSet("rls_year",S.year); render(); })
+  var visOff=getVisibleOffices();
+  if(visOff.indexOf(S.office)<0)S.office=visOff[0]||"DHM";
+
+  var stns=S.stns[SK(S.office,S.subtype)]||[];
+  var curK=TK(S.office,S.subtype,S.month);var curSt=S.status[curK]||{};
+  var days=dim(S.month);var locked=isMonthLocked();
+  var days2=S.month2?dim(S.month2):0;
+  var curK2=S.month2?TK(S.office,S.subtype,S.month2):null;
+  var curSt2=curK2?(S.status[curK2]||{}):null;
+  var locked2=S.month2?isMonthLocked(S.month2):false;
+  var isAdmin=AUTH.user.role==="admin";
+
+  var app=document.getElementById("app");app.innerHTML="";
+
+  /* ── HEADER ── */
+  var mon2Opts=[{value:"",label:"— 2nd Month —"}].concat(
+    MONTHS.filter(function(m){return m!==S.month;}).map(function(m){return {value:m,label:m};})
+  );
+  var headerChildren=[
+    el("div",{cls:"header-title"},["🌊  DHM RLS Station Daily Status Register"]),
+    el("div",{cls:"header-row"},[
+      el("div",{cls:"ctrl"},[el("span",{cls:"ctrl-lbl"},["Year:"]),
+        mkSel(YEARS.map(String),String(S.year),"hdr-sel",function(){S.year=parseInt(this.value);S.status={};lSet("rls_year",S.year);render();})
       ]),
-      el("div", {cls:"ctrl"}, [el("span",{cls:"ctrl-lbl"},["Office:"]), offSel, addOffBtn, delOffBtn]),
-      el("div", {cls:"ctrl"}, [el("span",{cls:"ctrl-lbl"},["Sub-type:"]), subSel]),
-      el("div", {cls:"ctrl"}, [el("span",{cls:"ctrl-lbl"},["Month:"]), monSel]),
-      manBtn
+      el("div",{cls:"ctrl"},[el("span",{cls:"ctrl-lbl"},["Office:"]),
+        mkSel(visOff,S.office,"hdr-sel",function(){S.office=this.value;render();}),
+        isAdmin?el("button",{cls:"hdr-btn"+(S.showAddOff?" hdr-btn-active":""),onclick:function(){S.showAddOff=!S.showAddOff;S.showDelOff=false;render();}},["+ Add"]):null,
+        isAdmin?el("button",{cls:"hdr-btn hdr-btn-red"+(S.showDelOff?" hdr-btn-active":""),onclick:function(){S.showDelOff=!S.showDelOff;S.showAddOff=false;render();}},["🗑"]):null
+      ]),
+      el("div",{cls:"ctrl"},[el("span",{cls:"ctrl-lbl"},["Sub-type:"]),
+        mkSel(SUBTYPES,S.subtype,"hdr-sel",function(){S.subtype=this.value;render();})
+      ]),
+      el("div",{cls:"ctrl"},[el("span",{cls:"ctrl-lbl"},["Month 1:"]),
+        mkSel(MONTHS,S.month,"hdr-sel",function(){S.month=this.value;render();})
+      ]),
+      S.view==="status"?el("div",{cls:"ctrl"},[el("span",{cls:"ctrl-lbl"},["Month 2:"]),
+        mkSel(mon2Opts,S.month2,"hdr-sel",function(){S.month2=this.value;render();})
+      ]):null,
+      S.view==="status"?(
+        locked
+          ?el("button",{cls:"hdr-btn hdr-btn-locked",onclick:isAdmin?unlockMonth:function(){flash("Only Admin can unlock",true);}},["🔒 Locked"+(isAdmin?" — Unlock":"")])
+          :el("button",{cls:"hdr-btn hdr-btn-lock",onclick:lockMonth},["🔒 Lock Month"])
+      ):null,
+      isAdmin?el("button",{cls:"manage-btn"+(S.showManage?" active":""),onclick:function(){S.showManage=!S.showManage;S.showUserMgmt=false;render();}},["⚙ Stations ("+stns.length+")"]):null,
+      isAdmin?el("button",{cls:"manage-btn"+(S.showUserMgmt?" active":""),onclick:function(){S.showUserMgmt=!S.showUserMgmt;S.showManage=false;render();}},["👥 Users"]):null,
+      el("div",{cls:"user-pill"},[
+        txt("👤 "+AUTH.user.username),
+        el("span",{style:"font-size:9px;opacity:.65;margin-left:2px"},[" · "+(AUTH.user.role==="admin"?"Admin":"Data Entry")]),
+        el("button",{cls:"logout-btn",onclick:doLogout},["Sign Out"])
+      ])
     ])
   ];
 
-  // Add Office panel
-  if (S.showAddOff) {
-    var offInp = el("input", {type:"text", placeholder:"New office name (e.g. OHM Surkhet)", value: S.newOff,
-      oninput: function(){ S.newOff=this.value; },
-      onkeydown: function(e){ if(e.key==="Enter") addOffice(); }
-    });
-    headerChildren.push(
-      el("div", {cls:"sub-panel"}, [
-        el("div", {cls:"sub-panel-row"}, [
-          offInp,
-          el("button", {cls:"btn-add", onclick: addOffice}, ["Add"]),
-          el("button", {cls:"btn-x", onclick: function(){ S.showAddOff=false; S.newOff=""; render(); }}, ["✕"])
-        ])
-      ])
-    );
-    setTimeout(function(){ offInp.focus(); }, 10);
+  // Add/Delete Office panels
+  if(S.showAddOff&&isAdmin){
+    var offInp=el("input",{type:"text",placeholder:"New office name (e.g. OHM Surkhet)",value:S.newOff,
+      oninput:function(){S.newOff=this.value;},
+      onkeydown:function(e){if(e.key==="Enter")addOffice();}});
+    headerChildren.push(el("div",{cls:"sub-panel"},[
+      el("div",{cls:"sub-panel-row"},[offInp,el("button",{cls:"btn-add",onclick:addOffice},["Add"]),
+        el("button",{cls:"btn-x",onclick:function(){S.showAddOff=false;S.newOff="";render();}},["✕"])])
+    ]));
+    setTimeout(function(){offInp.focus();},10);
   }
-
-  // Delete Office panel
-  if (S.showDelOff) {
-    var delRows = S.offices.map(function(o) {
-      var nameEl;
-      if (o === S.office) {
-        nameEl = el("span", {cls:"del-row-name current"}, [o+" (current)"]);
-      } else {
-        nameEl = el("span", {cls:"del-row-name"}, [o]);
-      }
-      var actionEl;
-      if (o === "DHM") {
-        actionEl = el("span", {cls:"protected-lbl"}, ["default — cannot delete"]);
-      } else {
-        (function(name) {
-          actionEl = el("button", {cls:"btn-del-off", onclick: function(){ deleteOffice(name); }}, ["Delete"]);
-        })(o);
-      }
-      return el("div", {cls:"del-row"}, [nameEl, actionEl]);
+  if(S.showDelOff&&isAdmin){
+    var delRows=S.offices.map(function(o){
+      var nEl=el("span",{cls:"del-row-name"+(o===S.office?" current":"")},[o+(o===S.office?" (current)":"")]);
+      var aEl;
+      if(o==="DHM")aEl=el("span",{cls:"protected-lbl"},["default — cannot delete"]);
+      else(function(nm){aEl=el("button",{cls:"btn-del-off",onclick:function(){deleteOffice(nm);}},["Delete"]);})(o);
+      return el("div",{cls:"del-row"},[nEl,aEl]);
     });
-    headerChildren.push(
-      el("div", {cls:"del-panel"}, [
-        el("div", {cls:"del-panel-info"}, ["Select an office to delete. All its stations and status data will be removed."]),
-      ].concat(delRows))
-    );
+    headerChildren.push(el("div",{cls:"del-panel"},[el("div",{cls:"del-panel-info"},["Select office to delete. All its stations and data will be removed."])].concat(delRows)));
   }
+  app.appendChild(el("div",{cls:"header"},headerChildren));
 
-  app.appendChild(el("div", {cls:"header"}, headerChildren));
+  // User management panel
+  if(S.showUserMgmt&&isAdmin)renderUserPanel(app);
 
-  // ── TABS ──
+  // Tabs
   app.appendChild(el("div",{cls:"tabs"},[
-    el("button",{cls:"tab"+(S.view==="status"?" active":""),
-      onclick:function(){ S.view="status"; render(); }},["📋 Daily Status"]),
-    el("button",{cls:"tab"+(S.view==="summary"?" active":""),
-      onclick:function(){ S.view="summary"; render(); }},["📊 Annual Summary"])
+    el("button",{cls:"tab"+(S.view==="status"?" active":""),onclick:function(){S.view="status";render();}},["📋 Daily Status"]),
+    el("button",{cls:"tab"+(S.view==="summary"?" active":""),onclick:function(){S.view="summary";render();}},["📊 Annual Summary"])
   ]));
 
-  if (S.view === "summary") {
+  if(S.view==="summary"){
     renderSummary(app);
     app.appendChild(el("div",{cls:"footer"},[
-      el("span",{},["All changes auto-saved to browser storage"]),
-      el("span",{},[S.office+" · "+S.subtype+" · "+S.year])
+      el("span",["Annual summary · Changes auto-saved"]),
+      el("span",[S.office+" · "+S.subtype+" · "+S.year])
     ]));
     app.appendChild(el("div",{cls:"dev-footer"},["Developed by: Avishek Pokhrel, Hydrologist, DHM"]));
     return;
   }
-  var legendItems = [["A","Active"],["I","Inactive"],["D","Discontinued"],["F","Flooded Away"],["-","Unchecked"]].map(function(pair) {
-    return el("span", {cls:"leg-item"}, [
-      el("span", {cls:"leg-code", style:"color:"+S_CLR[pair[0]]}, [pair[0]]),
-      el("span", {style:"color:#64748b"}, [" = "+pair[1]])
-    ]);
-  });
-  legendItems.push(el("span", {cls:"leg-hint"}, ["Click any day cell to cycle status"]));
-  app.appendChild(el("div", {cls:"legend"}, legendItems));
 
-  // ── MANAGE PANEL ──
-  if (S.showManage) {
-    var noInp = el("input", {type:"text", placeholder:"e.g. 610", value: S.newNo,
-      style:"width:72px",
-      oninput: function(){ S.newNo=this.value; }
-    });
-    var nameInp = el("input", {type:"text", placeholder:"Station or river name", value: S.newName,
-      oninput: function(){ S.newName=this.value; },
-      onkeydown: function(e){ if(e.key==="Enter") addStation(); }
-    });
-    var typeSel = mkSel(TYPES, S.newType, "", function(){ S.newType=this.value; });
-    var medSel  = mkSel(MEDIUMS, S.newMed, "", function(){ S.newMed=this.value; });
-
-    var stnFormChildren = [
-      el("div",{cls:"fld"},[el("label",{},[txt("Station No.")]), noInp]),
-      el("div",{cls:"fld fld-grow"},[el("label",{},[txt("Name / River")]), nameInp]),
-      el("div",{cls:"fld"},[el("label",{},[txt("Type")]), typeSel]),
-      el("div",{cls:"fld"},[el("label",{},[txt("Comm. Medium")]), medSel]),
-      el("button",{cls:"btn-stn-add", onclick: addStation},["+ Add & Save"])
-    ];
-
+  /* ── MANAGE STATIONS PANEL ── */
+  if(S.showManage&&isAdmin){
+    var noInp=el("input",{type:"text",placeholder:"e.g. 610",value:S.newNo,style:"width:72px",oninput:function(){S.newNo=this.value;}});
+    var nameInp=el("input",{type:"text",placeholder:"Station or river name",value:S.newName,
+      oninput:function(){S.newName=this.value;},onkeydown:function(e){if(e.key==="Enter")addStation();}});
+    var typeSel=mkSel(TYPES,S.newType,"",function(){S.newType=this.value;});
+    var medSel=mkSel(MEDIUMS,S.newMed,"",function(){S.newMed=this.value;});
     var listEl;
-    if (stns.length === 0) {
-      listEl = el("div",{cls:"empty-note"},["No stations yet. Fill in the form above and click Add & Save."]);
-    } else {
-      var tbody = el("tbody");
-      stns.forEach(function(stn, i) {
-        (function(s) {
-          tbody.appendChild(el("tr",{},[
-            el("td",{style:"text-align:center;color:#94a3b8;font-size:11px"}, [String(i+1)]),
-            el("td",{style:"text-align:center;font-family:monospace;font-size:11px"}, [s.no]),
-            el("td",{}, [s.name]),
-            el("td",{style:"text-align:center;color:#64748b;font-size:11px"}, [s.type]),
-            el("td",{style:"text-align:center;color:#64748b;font-size:11px"}, [s.medium]),
-            el("td",{style:"text-align:center"}, [
-              el("button",{cls:"btn-rm", onclick: function(){ deleteStation(s.id); }}, ["✕ remove"])
-            ])
+    if(stns.length===0){listEl=el("div",{cls:"empty-note"},["No stations yet."]);}
+    else{
+      var stbody=el("tbody");
+      stns.forEach(function(stn,i){
+        (function(s){
+          stbody.appendChild(el("tr",[
+            el("td",{style:"text-align:center;color:#94a3b8;font-size:11px"},[String(i+1)]),
+            el("td",{style:"text-align:center;font-family:monospace;font-size:11px"},[s.no]),
+            el("td",[s.name]),
+            el("td",{style:"text-align:center;color:#64748b;font-size:11px"},[s.type]),
+            el("td",{style:"text-align:center;color:#64748b;font-size:11px"},[s.medium]),
+            el("td",{style:"text-align:center"},[el("button",{cls:"btn-rm",onclick:function(){deleteStation(s.id);}},["✕ remove"])])
           ]));
         })(stn);
       });
-      listEl = el("div",{cls:"stn-list"},[
-        el("table",{},[
-          el("thead",{},[el("tr",{},[
-            el("th",{style:"text-align:center"},["#"]),
-            el("th",{style:"text-align:center"},["No."]),
-            el("th",{style:"text-align:left"},["Name / River"]),
-            el("th",{style:"text-align:center"},["Type"]),
-            el("th",{style:"text-align:center"},["Medium"]),
-            el("th",[])
-          ])]),
-          tbody
+      listEl=el("div",{cls:"stn-list"},[
+        el("table",[
+          el("thead",[el("tr",[el("th",{style:"text-align:center"},["#"]),el("th",{style:"text-align:center"},["No."]),el("th",{style:"text-align:left"},["Name / River"]),el("th",{style:"text-align:center"},["Type"]),el("th",{style:"text-align:center"},["Medium"]),el("th",[""])])]),
+          stbody
         ])
       ]);
     }
-
     app.appendChild(el("div",{cls:"manage-panel"},[
-      el("div",{cls:"manage-title"},[
-        txt("Stations for: "),
-        el("span",{cls:"off"},[S.office]),
-        txt(" / "),
-        el("span",{cls:"sub"},[S.subtype])
-      ]),
-      el("div",{cls:"stn-form"}, stnFormChildren),
-      listEl
+      el("div",{cls:"manage-title"},[txt("Stations for: "),el("span",{cls:"off"},[S.office]),txt(" / "),el("span",{cls:"sub"},[S.subtype])]),
+      el("div",{cls:"stn-form"},[
+        el("div",{cls:"fld"},[el("label",[txt("Station No.")]),noInp]),
+        el("div",{cls:"fld fld-grow"},[el("label",[txt("Name / River")]),nameInp]),
+        el("div",{cls:"fld"},[el("label",[txt("Type")]),typeSel]),
+        el("div",{cls:"fld"},[el("label",[txt("Comm. Medium")]),medSel]),
+        el("button",{cls:"btn-stn-add",onclick:addStation},["+ Add & Save"])
+      ]),listEl
     ]));
-    setTimeout(function(){ noInp.focus(); }, 10);
+    setTimeout(function(){noInp.focus();},10);
   }
 
-  // ── STATUS TABLE ──
-  // Build colgroup
-  var cg = el("colgroup");
-  [32,58,168,120,55].forEach(function(w){ var c=el("col"); c.style.width=w+"px"; cg.appendChild(c); });
-  for (var ci=0; ci<31; ci++) { var c=el("col"); c.style.width="26px"; cg.appendChild(c); }
-  [46,46,78].forEach(function(w){ var c=el("col"); c.style.width=w+"px"; cg.appendChild(c); });
-
-  // Header row
-  var hRow = el("tr");
-  [["S.N.",""],["Stn No.",""],["Name / River","tleft"],["Station Type",""],["Medium",""]].forEach(function(h){
-    hRow.appendChild(el("th",{cls:h[1]},[h[0]]));
+  /* ── LEGEND ── */
+  var legItems=[{v:"A",l:"Active"},{v:"I",l:"Inactive"},{v:"F",l:"Flooded Away"},{v:"-",l:"Unchecked"}].map(function(p){
+    return el("span",{cls:"leg-item"},[el("span",{cls:"leg-code",style:"color:"+S_CLR[p.v]},[p.v]),el("span",{style:"color:#64748b"},[" = "+p.l])]);
   });
-  for (var d=1; d<=days; d++) { hRow.appendChild(el("th",[String(d)])); }
-  for (var d=days+1; d<=31; d++) { hRow.appendChild(el("th",{cls:"dim"},[String(d)])); }
-  hRow.appendChild(el("th",{cls:"dark"},["Active"]));
-  hRow.appendChild(el("th",{cls:"dark"},["Inactive"]));
-  hRow.appendChild(el("th",{cls:"dark tleft"},["Remarks"]));
+  legItems.push(el("span",{cls:"leg-hint"},["Click any day cell → select status from dropdown"]));
+  app.appendChild(el("div",{cls:"legend"},legItems));
+
+  /* ── LOCK BANNER ── */
+  if(locked){
+    app.appendChild(el("div",{cls:"lock-banner"},[
+      txt("🔒  "+S.month+" "+S.year+" is LOCKED — entries are read-only"),
+      isAdmin?el("button",{cls:"hdr-btn",style:"font-size:11px;padding:3px 10px;margin-left:4px",onclick:unlockMonth},["🔓 Unlock"]):null
+    ]));
+  }
+
+  /* ── STATUS TABLE ── */
+  var thead=el("thead");
+  if(S.month2){
+    // Two-row header: row1 = month name spans, row2 = day numbers
+    var r1=el("tr");
+    var r2=el("tr");
+    // Fixed info columns
+    [["S.N.","",2],["Stn No.","",2],["Name / River","tleft",2],["Station Type","",2],["Medium","",2]].forEach(function(h){
+      var th=el("th",{cls:h[1]});th.setAttribute("rowspan",String(h[2]));th.textContent=h[0];r1.appendChild(th);
+    });
+    // Month 1 span
+    var m1th=el("th",{cls:"msep",colspan:String(days+2),style:"background:#2b4d7c;text-align:center;font-size:11px;padding:3px"});
+    m1th.textContent=S.month;r1.appendChild(m1th);
+    // Month 2 span
+    var m2th=el("th",{cls:"m2h msep",colspan:String(days2+2),style:"text-align:center;font-size:11px;padding:3px"});
+    m2th.textContent=S.month2+(locked2?" 🔒":"");r1.appendChild(m2th);
+    // Day number rows
+    for(var d=1;d<=31;d++){var c=d===1?"msep":d>days?"dim":"";r2.appendChild(el("th",{cls:c},[String(d)]));}
+    r2.appendChild(el("th",{cls:"dark"},["A"]));r2.appendChild(el("th",{cls:"dark"},["I"]));
+    for(var d=1;d<=31;d++){var c=d===1?"m2h msep":d>days2?"m2h dim":"m2h";r2.appendChild(el("th",{cls:c},[String(d)]));}
+    r2.appendChild(el("th",{cls:"dark m2h"},["A"]));r2.appendChild(el("th",{cls:"dark m2h"},["I"]));
+    thead.appendChild(r1);thead.appendChild(r2);
+  }else{
+    var sRow=el("tr");
+    [["S.N.",""],["Stn No.",""],["Name / River","tleft"],["Station Type",""],["Medium",""]].forEach(function(h){sRow.appendChild(el("th",{cls:h[1]},[h[0]]));});
+    for(var d=1;d<=days;d++)sRow.appendChild(el("th",[String(d)]));
+    for(var d=days+1;d<=31;d++)sRow.appendChild(el("th",{cls:"dim"},[String(d)]));
+    sRow.appendChild(el("th",{cls:"dark"},["Active"]));
+    sRow.appendChild(el("th",{cls:"dark"},["Inactive"]));
+    thead.appendChild(sRow);
+  }
 
   // Body
-  var tbody = el("tbody");
-  if (stns.length === 0) {
-    var noTd = el("td",{cls:"no-stn"},["No stations for "+S.office+" / "+S.subtype+". Open ⚙ Manage Stations above to add them."]);
-    noTd.setAttribute("colspan", String(5+31+3));
+  var tbody=el("tbody");
+  if(stns.length===0){
+    var noTd=el("td",{cls:"no-stn"},["No stations for "+S.office+" / "+S.subtype+". Open ⚙ Manage Stations to add them."]);
+    noTd.setAttribute("colspan",String(5+31+2+(S.month2?31+2:0)));
     tbody.appendChild(el("tr",[noTd]));
-  } else {
-    stns.forEach(function(stn, i) {
-      var stats = getStnStats(stn.id);
-      var stnSt = (curSt[stn.id]) || {};
-      var tr = el("tr");
+  }else{
+    stns.forEach(function(stn,i){
+      var stats=getStnStats(stn.id);
+      var stnSt=curSt[stn.id]||{};
+      var tr=el("tr");
       tr.appendChild(el("td",{style:"text-align:center;color:#94a3b8;padding:3px 4px;border-right:1px solid #e2e8f0"},[String(i+1)]));
       tr.appendChild(el("td",{style:"text-align:center;font-family:monospace;padding:3px 4px;border-right:1px solid #e2e8f0"},[stn.no]));
-      tr.appendChild(el("td",{style:"text-align:left;padding-left:8px;padding-right:4px;border-right:1px solid #e2e8f0;overflow:hidden;white-space:nowrap;max-width:168px"},[stn.name]));
+      tr.appendChild(el("td",{style:"text-align:left;padding-left:8px;border-right:1px solid #e2e8f0;overflow:hidden;white-space:nowrap;max-width:168px"},[stn.name]));
       tr.appendChild(el("td",{style:"text-align:center;font-size:10px;color:#64748b;padding:3px 4px;border-right:1px solid #e2e8f0"},[stn.type]));
       tr.appendChild(el("td",{style:"text-align:center;font-size:10px;padding:3px 4px;border-right:1px solid #e2e8f0"},[stn.medium]));
-      for (var d=1; d<=days; d++) {
-        (function(day) {
-          var v = stnSt[day] || "";
-          var td = el("td",{cls:"day"});
-          if (v) { td.style.background = S_BG[v]; td.style.color = S_CLR[v]; td.textContent = v; }
-          else { td.style.color = "#e2e8f0"; td.textContent = ""; }
-          td.title = "Day "+day+(v?" : "+v:"");
-          td.onclick = (function(id,day){ return function(){ cycleStatus(id,day); }; })(stn.id, day);
+      // Month 1 days
+      for(var d=1;d<=31;d++){
+        (function(day){
+          var v=stnSt[day]||"",active=day<=days;
+          var tdCls="day"+(active&&locked?" dlocked":"")+(day===1?" msep":"");
+          if(!active)tdCls="grayed";
+          var td=el("td",{cls:tdCls});
+          if(active){
+            if(v){td.style.background=S_BG[v];td.style.color=S_CLR[v];td.textContent=v;}
+            else{td.style.color="#dde3ea";}
+            td.title=S.month+" Day "+day+(v?" : "+(S_LBL[v]||v):"");
+            if(!locked)(function(id,dy,m){td.onclick=function(e){showStatusPopup(e,id,dy,m);};})(stn.id,day,S.month);
+          }
           tr.appendChild(td);
         })(d);
       }
-      for (var d=days+1; d<=31; d++) {
-        var td = el("td",{cls:"grayed"});
-        tr.appendChild(td);
+      tr.appendChild(el("td",{cls:"active-days"},[stats.A?String(stats.A):""]));
+      tr.appendChild(el("td",{cls:"inactive-days"},[stats.I?String(stats.I):""]));
+      // Month 2 days (optional)
+      if(S.month2&&curSt2){
+        var stnSt2=curSt2[stn.id]||{};var stats2=getStnStats(stn.id,S.month2);
+        for(var d=1;d<=31;d++){
+          (function(day){
+            var v=stnSt2[day]||"",active=day<=days2;
+            var tdCls="day m2h"+(active&&locked2?" dlocked":"")+(day===1?" msep":"");
+            if(!active)tdCls="grayed";
+            var td=el("td",{cls:tdCls});
+            if(active){
+              if(v){td.style.background=S_BG[v];td.style.color=S_CLR[v];td.textContent=v;}
+              else{td.style.color="#dde3ea";}
+              td.title=S.month2+" Day "+day+(v?" : "+(S_LBL[v]||v):"");
+              if(!locked2)(function(id,dy,m){td.onclick=function(e){showStatusPopup(e,id,dy,m);};})(stn.id,day,S.month2);
+            }
+            tr.appendChild(td);
+          })(d);
+        }
+        tr.appendChild(el("td",{cls:"active-days"},[stats2.A?String(stats2.A):""]));
+        tr.appendChild(el("td",{cls:"inactive-days"},[stats2.I?String(stats2.I):""]));
       }
-      tr.appendChild(el("td",{cls:"active-days"},[stats.A ? String(stats.A) : ""]));
-      tr.appendChild(el("td",{cls:"inactive-days"},[stats.I ? String(stats.I) : ""]));
-      tr.appendChild(el("td",{cls:"remarks"},[""]));
       tbody.appendChild(tr);
     });
   }
 
-  // Footer summary rows
-  var tfoot = el("tfoot");
-  if (stns.length > 0) {
-    var summaryRows = [
-      ["Active (A)","#15803d","A"],
-      ["Inactive (I)","#dc2626","I"],
-      ["Discontinued (D)","#7c3aed","D"],
-      ["Flooded Away (F)","#c2410c","F"],
-      ["Unchecked (-)","#6b7280","-"],
-      ["Total","#1a3558","total"]
-    ];
-    summaryRows.forEach(function(row, ri) {
-      var label=row[0], color=row[1], key=row[2];
-      var tr = el("tr", {cls: ri===5?"total":""});
-      var lbl = el("td",{cls:"flbl",style:"color:"+color},[label]);
-      lbl.setAttribute("colspan","5");
-      tr.appendChild(lbl);
-      for (var d=1; d<=days; d++) {
-        var t = getDayTotals(d);
-        var v = key==="total" ? (t.A+t.I+t.D+t.F+t["-"]) : (t[key]||0);
-        var td = el("td",{style:"text-align:center;padding:3px 4px;border-right:1px solid #e2e8f0;font-size:11px;"+(v?"font-weight:bold;color:"+color:"color:#dde3ea")},
-          [v ? String(v) : ""]);
-        tr.appendChild(td);
+  // Footer totals
+  var tfoot=el("tfoot");
+  if(stns.length>0){
+    var fRows=[["Active (A)","#15803d","A"],["Inactive (I)","#dc2626","I"],["Flooded Away (F)","#c2410c","F"],["Unchecked (-)","#6b7280","-"],["Total","#1a3558","total"]];
+    fRows.forEach(function(row,ri){
+      var label=row[0],color=row[1],key=row[2];
+      var tr=el("tr",{cls:ri===4?"total":""});
+      var lbl=el("td",{cls:"flbl",style:"color:"+color},[label]);lbl.setAttribute("colspan","5");tr.appendChild(lbl);
+      for(var d=1;d<=days;d++){
+        var t=getDayTotals(d);
+        var v=key==="total"?(t.A+t.I+t.F+t["-"]):(t[key]||0);
+        tr.appendChild(el("td",{style:"text-align:center;padding:3px 4px;border-right:1px solid #e2e8f0;font-size:11px;"+(v?"font-weight:bold;color:"+color:"color:#dde3ea")},[v?String(v):""]));
       }
-      for (var d=days+1; d<=31; d++) {
-        tr.appendChild(el("td",{cls:"grayed"}));
+      for(var d=days+1;d<=31;d++)tr.appendChild(el("td",{cls:"grayed"}));
+      var et=el("td");et.setAttribute("colspan","2");tr.appendChild(et);
+      if(S.month2){
+        for(var d=1;d<=days2;d++){
+          var t2=getDayTotals(d,S.month2);
+          var v2=key==="total"?(t2.A+t2.I+t2.F+t2["-"]):(t2[key]||0);
+          tr.appendChild(el("td",{style:"text-align:center;padding:3px 4px;border-right:1px solid #e2e8f0;font-size:11px;background:#f0f7ff;"+(d===1?"border-left:3px solid #9bb5cc;":"")+(v2?"font-weight:bold;color:"+color:"color:#dde3ea")},[v2?String(v2):""]));
+        }
+        for(var d=days2+1;d<=31;d++)tr.appendChild(el("td",{cls:"grayed"}));
+        var et2=el("td");et2.setAttribute("colspan","2");tr.appendChild(et2);
       }
-      var emptyTd = el("td");
-      emptyTd.setAttribute("colspan","3");
-      tr.appendChild(emptyTd);
       tfoot.appendChild(tr);
     });
   }
 
-  var tbl = el("table",{cls:"status"});
-  var minW = 5*80 + days*26 + 170;
-  tbl.style.minWidth = minW+"px";
-  tbl.appendChild(cg);
-  tbl.appendChild(el("thead",[hRow]));
-  tbl.appendChild(tbody);
-  tbl.appendChild(tfoot);
+  var tbl=el("table",{cls:"status"});
+  tbl.style.minWidth=(433+days*26+(S.month2?days2*26+92:0))+"px";
+  var cg=el("colgroup");
+  [32,58,168,120,55].forEach(function(w){var c=el("col");c.style.width=w+"px";cg.appendChild(c);});
+  for(var ci=0;ci<31;ci++){var c=el("col");c.style.width="26px";cg.appendChild(c);}
+  [46,46].forEach(function(w){var c=el("col");c.style.width=w+"px";cg.appendChild(c);});
+  if(S.month2){
+    for(var ci=0;ci<31;ci++){var c=el("col");c.style.width="26px";cg.appendChild(c);}
+    [46,46].forEach(function(w){var c=el("col");c.style.width=w+"px";cg.appendChild(c);});
+  }
+  tbl.appendChild(cg);tbl.appendChild(thead);tbl.appendChild(tbody);tbl.appendChild(tfoot);
   app.appendChild(el("div",{cls:"tbl-wrap"},[tbl]));
 
-  // ── FOOTER ──
   app.appendChild(el("div",{cls:"footer"},[
-    el("span",{},["All changes auto-saved to browser storage"]),
-    el("span",{},[S.office+" · "+S.subtype+" · "+S.month+" "+S.year+" · "+stns.length+" station"+(stns.length!==1?"s":"")])
+    el("span",["Changes auto-saved to browser storage"+(locked?" · 🔒 Month Locked":"")]),
+    el("span",[S.office+" · "+S.subtype+" · "+S.month+" "+S.year+" · "+stns.length+" station"+(stns.length!==1?"s":"")])
   ]));
   app.appendChild(el("div",{cls:"dev-footer"},["Developed by: Avishek Pokhrel, Hydrologist, DHM"]));
 }
 
-window._appRender = render;
-if (typeof gsLoad !== "undefined") {
-  gsLoad(function() {
-    render();
-    startAutoRefresh();
-  });
-} else {
-  render();
+/* ── INIT ── */
+window._appRender=render;
+newCaptcha();
+if(checkSession()){
+  if(typeof gsLoad!=="undefined"){
+    gsLoad(function(){render();if(typeof startAutoRefresh!=="undefined")startAutoRefresh();});
+  }else{render();}
+}else{
+  renderLogin();
 }
 </script>
 </body>
 </html>
+
 

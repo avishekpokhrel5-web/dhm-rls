@@ -743,7 +743,7 @@ function lockMonth(){
   body.appendChild(intro);
 
   var tbl=document.createElement("table");tbl.className="miss-table";
-  tbl.innerHTML='<thead><tr><th>#</th><th>Station No.</th><th>Name / River</th>'+
+  tbl.innerHTML='<thead><tr><th>#</th><th>Station No.</th><th>'+(SUBTYPE_NAME_LBL[S.subtype]||'Name / River')+'</th>'+
     '<th>Missing Days</th><th style="text-align:center">Count</th></tr></thead>';
   var tb=document.createElement("tbody");
   missing.forEach(function(m,i){
@@ -1016,7 +1016,7 @@ function downloadMonthCSV(month){
   var k=TK(S.office,S.subtype,month);
   if(S.status[k]===undefined)S.status[k]=lGet(k)||{};
   var days=dim(month);
-  var hdr=["S.N.","Station No.","Name / River","Elevation (m)","Type","Medium"];
+  var hdr=["S.N.","Station No.",SUBTYPE_NAME_LBL[S.subtype]||"Name / River","Elevation (m)","Type","Medium"];
   for(var d=1;d<=days;d++)hdr.push(month.substring(0,3)+"-"+d);
   hdr=hdr.concat(["Active (A)","Inactive (I)","Flooded Away (F)","Unchecked (-)"]);
   var rows=[hdr];
@@ -1194,7 +1194,7 @@ function downloadSummaryPDF(){
     '<p>Year: '+S.year+' &nbsp;·&nbsp; Generated: '+new Date().toLocaleDateString()+'&nbsp;·&nbsp; '+stns.length+' stations</p>'+
     '<table><thead><tr>'+
     '<th style="width:28px">#</th><th class="tleft" style="width:55px">Stn No.</th>'+
-    '<th class="tleft" style="min-width:140px">Name / River</th>'+
+    '<th class="tleft" style="min-width:140px">'+(SUBTYPE_NAME_LBL[S.subtype]||'Name / River')+'</th>'+
     mHdrs+
     '<th style="color:#4ade80;background:#1a3558">A</th>'+
     '<th style="color:#f87171;background:#1a3558">I</th>'+
@@ -1783,7 +1783,7 @@ function render(){
           el("thead",[el("tr",[
             el("th",{style:"text-align:center"},["#"]),
             el("th",{style:"text-align:center"},["No."]),
-            el("th",{style:"text-align:left"},["Name / River"]),
+            el("th",{style:"text-align:left"},[SUBTYPE_NAME_LBL[S.subtype]||"Name / River"]),
             el("th",{style:"text-align:center"},["Elev (m)"]),
             el("th",{style:"text-align:center"},["Type"]),
             el("th",{style:"text-align:center"},["Medium"]),
@@ -1797,7 +1797,7 @@ function render(){
       el("div",{cls:"manage-title"},[txt("Stations for: "),el("span",{cls:"off"},[S.office]),txt(" / "),el("span",{cls:"sub"},[S.subtype])]),
       el("div",{cls:"stn-form"},[
         el("div",{cls:"fld"},[el("label",[txt("Station No.")]),noInp]),
-        el("div",{cls:"fld fld-grow"},[el("label",[txt("Name / River")]),nameInp]),
+        el("div",{cls:"fld fld-grow"},[el("label",[txt(SUBTYPE_NAME_LBL[S.subtype]||"Name / River")]),nameInp]),
         el("div",{cls:"fld"},[el("label",[txt("Elevation (m)")]),elevInp]),
         el("div",{cls:"fld"},[el("label",[txt("Type")]),typeSel]),
         el("div",{cls:"fld"},[el("label",[txt("Comm. Medium")]),medSel]),
@@ -1826,7 +1826,7 @@ function render(){
   /* ── STATUS TABLE ── */
   var thead=el("thead");
   var sRow=el("tr");
-  [["S.N.",""],["Stn No.",""],["Name / River","tleft"],["Elev (m)",""],["Station Type",""],["Medium",""]].forEach(function(h){sRow.appendChild(el("th",{cls:h[1]},[h[0]]));});
+  [["S.N.",""],["Stn No.",""],[SUBTYPE_NAME_LBL[S.subtype]||"Name / River","tleft"],["Elev (m)",""],["Station Type",""],["Medium",""]].forEach(function(h){sRow.appendChild(el("th",{cls:h[1]},[h[0]]));});
   for(var d=1;d<=days;d++)sRow.appendChild(el("th",[String(d)]));
   for(var d=days+1;d<=31;d++)sRow.appendChild(el("th",{cls:"dim"},[String(d)]));
   sRow.appendChild(el("th",{cls:"dark"},["Active"]));

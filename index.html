@@ -235,6 +235,16 @@ table.status tfoot td.flbl{text-align:right;padding:4px 10px;
 table.status td.no-stn{padding:30px;text-align:center;
   color:#94a3b8;font-style:italic}
 
+/* Remarks column */
+table.status td.remarks-cell{padding:2px 4px;vertical-align:middle;background:#fafff5}
+table.status td.remarks-cell:focus-within{background:#fefce8}
+.remarks-inp{width:100%;min-width:100px;border:none;background:transparent;
+  font-size:10px;color:#374151;font-family:Arial,sans-serif;outline:none;
+  padding:2px 3px;border-radius:2px}
+.remarks-inp:focus{background:#fef9c3;border-radius:3px}
+.remarks-inp::placeholder{color:#c4cdd6;font-style:italic}
+.remarks-inp:disabled{color:#94a3b8;cursor:not-allowed!important}
+
 
 /* ── ANNUAL SUMMARY — VERTICAL 2-COL GRID ── */
 .summary-wrap{padding:12px 14px}
@@ -466,6 +476,7 @@ var MONTHS=["January","February","March","April","May","June","July","August","S
 // All subtypes as a flat list (used for station initialisation loops)
 var SUBTYPES=[
   "Hydrological Stations",
+  "Flood Stations",
   "Snow Stations — RLS",
   "Snow Stations — AWS",
   "Snow Stations — Glacier Camera"
@@ -473,6 +484,7 @@ var SUBTYPES=[
 // Grouped structure for the dropdown display
 var SUBTYPE_GROUPS=[
   {label:"Hydrological", options:["Hydrological Stations"]},
+  {label:"Flood", options:["Flood Stations"]},
   {label:"Snow Stations", options:["Snow Stations — RLS","Snow Stations — AWS","Snow Stations — Glacier Camera"]}
 ];
 var TYPES=["Manual+Automatic","Manual","Automatic"];
@@ -743,7 +755,7 @@ function lockMonth(){
   body.appendChild(intro);
 
   var tbl=document.createElement("table");tbl.className="miss-table";
-  tbl.innerHTML='<thead><tr><th>#</th><th>Station No.</th><th>'+(SUBTYPE_NAME_LBL[S.subtype]||'Name / River')+'</th>'+
+  tbl.innerHTML='<thead><tr><th>#</th><th>Station No.</th><th>'+getNameLabel()+'</th>'+
     '<th>Missing Days</th><th style="text-align:center">Count</th></tr></thead>';
   var tb=document.createElement("tbody");
   missing.forEach(function(m,i){
@@ -825,7 +837,7 @@ function editStation(id){
   editRow.className="edit-row";
   var td=document.createElement("td");td.setAttribute("colspan","7");
   var noI=document.createElement("input");noI.value=stn.no;noI.placeholder="Stn No.";noI.style.width="70px";
-  var nameI=document.createElement("input");nameI.value=stn.name;nameI.placeholder="Name / River";nameI.style.width="180px";
+  var nameI=document.createElement("input");nameI.value=stn.name;nameI.placeholder=getNameLabel();nameI.style.width="180px";
   var elevI=document.createElement("input");elevI.value=stn.elev||"";elevI.placeholder="Elev (m)";elevI.style.width="70px";
   var typeSel2=document.createElement("select");
   TYPES2.forEach(function(t){var o=document.createElement("option");o.value=t;o.textContent=t;if(t===stn.type)o.selected=true;typeSel2.appendChild(o);});
@@ -1016,16 +1028,16 @@ function downloadMonthCSV(month){
   var k=TK(S.office,S.subtype,month);
   if(S.status[k]===undefined)S.status[k]=lGet(k)||{};
   var days=dim(month);
-  var hdr=["S.N.","Station No.",SUBTYPE_NAME_LBL[S.subtype]||"Name / River","Elevation (m)","Type","Medium"];
+  var hdr=["S.N.","Station No.",getNameLabel(),"Elevation (m)","Type","Medium"];
   for(var d=1;d<=days;d++)hdr.push(month.substring(0,3)+"-"+d);
-  hdr=hdr.concat(["Active (A)","Inactive (I)","Flooded Away (F)","Unchecked (-)"]);
+  hdr=hdr.concat(["Active (A)","Inactive (I)","Flooded Away (F)","Unchecked (-)","Remarks"]);
   var rows=[hdr];
   stns.forEach(function(stn,idx){
     var st=(S.status[k]&&S.status[k][stn.id])||{};
     var row=[idx+1,stn.no,stn.name,stn.elev||"",stn.type,stn.medium];
     var cnt={A:0,I:0,F:0,"-":0};
     for(var d=1;d<=days;d++){var v=st[d]||"";row.push(v);if(cnt[v]!==undefined)cnt[v]++;}
-    row=row.concat([cnt.A,cnt.I,cnt.F,cnt["-"]]);
+    row=row.concat([cnt.A,cnt.I,cnt.F,cnt["-"],getRmk(stn.id)]);
     rows.push(row);
   });
   var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(",");}).join("\n");
@@ -1142,7 +1154,7 @@ function downloadMonthPDF(month){
       '<thead><tr>'+
         '<th class="tleft">#</th>'+
         '<th class="tleft">Stn No.</th>'+
-        '<th class="tleft">Name / River</th>'+
+        '<th class="tleft">'+getNameLabel()+'</th>'+
         dHdrs+
         '<th style="background:#14532d;color:#bbf7d0">A</th>'+
         '<th style="background:#7f1d1d;color:#fecaca">I</th>'+
@@ -1194,7 +1206,7 @@ function downloadSummaryPDF(){
     '<p>Year: '+S.year+' &nbsp;·&nbsp; Generated: '+new Date().toLocaleDateString()+'&nbsp;·&nbsp; '+stns.length+' stations</p>'+
     '<table><thead><tr>'+
     '<th style="width:28px">#</th><th class="tleft" style="width:55px">Stn No.</th>'+
-    '<th class="tleft" style="min-width:140px">'+(SUBTYPE_NAME_LBL[S.subtype]||'Name / River')+'</th>'+
+    '<th class="tleft" style="min-width:140px">'+getNameLabel()+'</th>'+
     mHdrs+
     '<th style="color:#4ade80;background:#1a3558">A</th>'+
     '<th style="color:#f87171;background:#1a3558">I</th>'+
@@ -1233,6 +1245,22 @@ function el(tag,attrs,children){
   return elem;
 }
 function txt(s){return document.createTextNode(s);}
+
+// Returns the dynamic "Name / …" column label depending on the active subtype
+function getNameLabel(){
+  if(S.subtype==="Snow Stations — AWS")return "Name / AWS Location";
+  if(S.subtype==="Snow Stations — Glacier Camera")return "Name / Glacier Camera Location";
+  return "Name / River";
+}
+
+// Monthly-remarks storage helpers
+function rmkKey(stnId){return "rls_mrmk_"+sk(S.office)+"_"+sk(S.subtype)+"_"+S.year+"_"+sk(S.month)+"_"+stnId;}
+function getRmk(stnId){return lGet(rmkKey(stnId))||"";}
+function setRmk(stnId,val){
+  if(val)lSet(rmkKey(stnId),val);
+  else{try{localStorage.removeItem(rmkKey(stnId));}catch(e){}}
+}
+
 function pwWrap(inp){
   /* Wraps a password <input> in a relative container with an eye-toggle button */
   var wrap=document.createElement("div");wrap.className="pw-wrap";
@@ -1783,7 +1811,7 @@ function render(){
           el("thead",[el("tr",[
             el("th",{style:"text-align:center"},["#"]),
             el("th",{style:"text-align:center"},["No."]),
-            el("th",{style:"text-align:left"},[SUBTYPE_NAME_LBL[S.subtype]||"Name / River"]),
+            el("th",{style:"text-align:left"},[getNameLabel()]),
             el("th",{style:"text-align:center"},["Elev (m)"]),
             el("th",{style:"text-align:center"},["Type"]),
             el("th",{style:"text-align:center"},["Medium"]),
@@ -1797,7 +1825,7 @@ function render(){
       el("div",{cls:"manage-title"},[txt("Stations for: "),el("span",{cls:"off"},[S.office]),txt(" / "),el("span",{cls:"sub"},[S.subtype])]),
       el("div",{cls:"stn-form"},[
         el("div",{cls:"fld"},[el("label",[txt("Station No.")]),noInp]),
-        el("div",{cls:"fld fld-grow"},[el("label",[txt(SUBTYPE_NAME_LBL[S.subtype]||"Name / River")]),nameInp]),
+        el("div",{cls:"fld fld-grow"},[el("label",[txt(getNameLabel())]),nameInp]),
         el("div",{cls:"fld"},[el("label",[txt("Elevation (m)")]),elevInp]),
         el("div",{cls:"fld"},[el("label",[txt("Type")]),typeSel]),
         el("div",{cls:"fld"},[el("label",[txt("Comm. Medium")]),medSel]),
@@ -1826,11 +1854,15 @@ function render(){
   /* ── STATUS TABLE ── */
   var thead=el("thead");
   var sRow=el("tr");
-  [["S.N.",""],["Stn No.",""],[SUBTYPE_NAME_LBL[S.subtype]||"Name / River","tleft"],["Elev (m)",""],["Station Type",""],["Medium",""]].forEach(function(h){sRow.appendChild(el("th",{cls:h[1]},[h[0]]));});
+  [["S.N.",""],["Stn No.",""],["Name / River","tleft"],["Elev (m)",""],["Station Type",""],["Medium",""]].forEach(function(h){
+    var label=h[0]==="Name / River"?getNameLabel():h[0];
+    sRow.appendChild(el("th",{cls:h[1]},[label]));
+  });
   for(var d=1;d<=days;d++)sRow.appendChild(el("th",[String(d)]));
   for(var d=days+1;d<=31;d++)sRow.appendChild(el("th",{cls:"dim"},[String(d)]));
   sRow.appendChild(el("th",{cls:"dark"},["Active"]));
   sRow.appendChild(el("th",{cls:"dark"},["Inactive"]));
+  sRow.appendChild(el("th",{cls:"dark",style:"min-width:110px"},["Remarks"]));
   thead.appendChild(sRow);
 
   // Body
@@ -1868,6 +1900,20 @@ function render(){
       }
       tr.appendChild(el("td",{cls:"active-days"},[stats.A?String(stats.A):""]));
       tr.appendChild(el("td",{cls:"inactive-days"},[stats.I?String(stats.I):""]));
+      // Remarks cell
+      (function(sid){
+        var rmkTd=el("td",{cls:"remarks-cell"});
+        var rmkInp=document.createElement("input");
+        rmkInp.type="text";rmkInp.className="remarks-inp";
+        rmkInp.value=getRmk(sid);
+        rmkInp.placeholder="Add remark…";
+        rmkInp.title="Monthly remark for this station";
+        rmkInp.onchange=function(){setRmk(sid,this.value.trim());};
+        rmkInp.onblur=function(){setRmk(sid,this.value.trim());};
+        if(locked){rmkInp.disabled=true;rmkInp.style.cursor="not-allowed";}
+        rmkTd.appendChild(rmkInp);
+        tr.appendChild(rmkTd);
+      })(stn.id);
       tbody.appendChild(tr);
     });
   }
@@ -1886,17 +1932,17 @@ function render(){
         tr.appendChild(el("td",{style:"text-align:center;padding:3px 4px;border-right:1px solid #e2e8f0;font-size:11px;"+(v?"font-weight:bold;color:"+color:"color:#dde3ea")},[v?String(v):""]));
       }
       for(var d=days+1;d<=31;d++)tr.appendChild(el("td",{cls:"grayed"}));
-      var et=el("td");et.setAttribute("colspan","2");tr.appendChild(et);
+      var et=el("td");et.setAttribute("colspan","3");tr.appendChild(et);
       tfoot.appendChild(tr);
     });
   }
 
   var tbl=el("table",{cls:"status"});
-  tbl.style.minWidth=(493+days*26)+"px";
+  tbl.style.minWidth=(493+days*26+110)+"px";
   var cg=el("colgroup");
   [32,58,168,60,120,55].forEach(function(w){var c=el("col");c.style.width=w+"px";cg.appendChild(c);});
   for(var ci=0;ci<31;ci++){var c=el("col");c.style.width="26px";cg.appendChild(c);}
-  [46,46].forEach(function(w){var c=el("col");c.style.width=w+"px";cg.appendChild(c);});
+  [46,46,110].forEach(function(w){var c=el("col");c.style.width=w+"px";cg.appendChild(c);});
   tbl.appendChild(cg);tbl.appendChild(thead);tbl.appendChild(tbody);tbl.appendChild(tfoot);
   app.appendChild(el("div",{cls:"tbl-wrap"},[tbl]));
 
@@ -1920,6 +1966,7 @@ if(checkSession()){
 </script>
 </body>
 </html>
+
 
 
 

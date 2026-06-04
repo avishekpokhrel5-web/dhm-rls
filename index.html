@@ -115,7 +115,6 @@ select,input,button{font-family:inherit}
 .leg-item{display:flex;align-items:center;gap:4px;font-size:11px}
 .leg-code{font-weight:bold;font-size:12px}
 .leg-hint{margin-left:auto;font-size:10px;color:#94a3b8;font-style:italic}
-/* lock banner replaced by a small inline tag on the legend bar */
 .lock-tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;
   font-weight:bold;color:#92400e;background:#fef9c3;border:1px solid #fbbf24;
   border-radius:12px;padding:2px 10px;white-space:nowrap}
@@ -403,26 +402,37 @@ function setSyncStatus(type,msg){
   var cls={ok:"sync-ok",save:"sync-save",err:"sync-err",init:"sync-init"}[type]||"sync-init";
   bar.innerHTML='<span class="sync-pill '+cls+'"><span class="sync-dot"></span> '+msg+'</span>';
 }
+
 function gsLoad(cb){
   setSyncStatus("init","Loading data…");
-  // Protect rls_users: user accounts and office assignments are local-authoritative.
-  // The 30-second auto-refresh must NEVER wipe assignments by pulling stale sheet data.
-  var PROTECTED=["rls_users"];
-  var localSnap={};
-  PROTECTED.forEach(function(k){try{var v=localStorage.getItem(k);if(v)localSnap[k]=v;}catch(e){}});
+
+  // ── FIX: Expanded protected keys — local data ALWAYS wins for these ──────
+  // rls_users    : user accounts & office assignments
+  // rls_offices  : office list
+  // rls_year     : currently selected year
+  // All rls_st_* : station status grids  (the data you enter daily)
+  // All rls_stn_*: station definitions
+  // All rls_lock_*: month lock flags
+  // All rls_mrmk_*: monthly remarks
+  // These are seeded from the sheet ONLY when they don't exist locally yet.
+  var ALWAYS_PROTECTED=["rls_users","rls_offices","rls_year"];
 
   fetch(GS_URL,{method:"GET"})
   .then(function(r){return r.json();})
   .then(function(data){
     if(data&&typeof data==="object"){
       Object.keys(data).forEach(function(k){
-        if(PROTECTED.indexOf(k)>=0)return; // skip — local wins
+        // 1. Skip the always-protected keys entirely if they exist locally
+        if(ALWAYS_PROTECTED.indexOf(k)>=0){
+          if(localStorage.getItem(k)!==null)return; // local wins
+          // Seed from sheet only if nothing local yet
+          try{localStorage.setItem(k,JSON.stringify(data[k]));}catch(e){}
+          return;
+        }
+        // 2. For ALL other rls_ keys (status, stations, locks, remarks):
+        //    NEVER overwrite existing local data — only seed if missing
+        if(localStorage.getItem(k)!==null)return; // local wins
         try{localStorage.setItem(k,JSON.stringify(data[k]));}catch(e){}
-      });
-      // Restore protected keys from snapshot; seed from sheet only if nothing local
-      PROTECTED.forEach(function(k){
-        if(localSnap[k]){try{localStorage.setItem(k,localSnap[k]);}catch(e){}}
-        else if(data[k]!==undefined){try{localStorage.setItem(k,JSON.stringify(data[k]));}catch(e){}}
       });
       setSyncStatus("ok","Loaded ✓");
     }
@@ -430,6 +440,7 @@ function gsLoad(cb){
   })
   .catch(function(){setSyncStatus("err","Load failed — using local data");if(cb)cb(false);});
 }
+
 function gsSave(){
   var payload={};
   for(var i=0;i<localStorage.length;i++){
@@ -439,6 +450,8 @@ function gsSave(){
     }
   }
   var json=JSON.stringify(payload);
+  // ── FIX: Always attempt save; only skip if nothing at all has changed ────
+  // Reset _lastSaved when page loads so first save always goes through
   if(json===_lastSaved)return;
   _lastSaved=json;
   setSyncStatus("save","Saving…");
@@ -447,13 +460,16 @@ function gsSave(){
   .then(function(){setSyncStatus("ok","Saved to Google Sheet ✓");})
   .catch(function(){setSyncStatus("err","Save failed — check connection");});
 }
+
 function scheduleSave(){
   if(_saveTimer)clearTimeout(_saveTimer);
   _saveTimer=setTimeout(gsSave,1500);
 }
+
 function startAutoRefresh(){
   setInterval(function(){
     if(document.hidden)return;
+    // ── FIX: Auto-refresh no longer overwrites local data (gsLoad fixed above)
     gsLoad(function(ok){if(ok&&window._appRender)window._appRender();});
   },30000);
 }
@@ -473,7 +489,6 @@ function startAutoRefresh(){
 var CUR_YEAR=new Date().getFullYear();
 var YEARS=(function(){var a=[];for(var y=2020;y<=CUR_YEAR+5;y++)a.push(y);return a;})();
 var MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
-// All subtypes as a flat list (used for station initialisation loops)
 var SUBTYPES=[
   "Hydrological Stations",
   "Flood Stations",
@@ -481,7 +496,6 @@ var SUBTYPES=[
   "Snow Stations — AWS",
   "Snow Stations — Glacier Camera"
 ];
-// Grouped structure for the dropdown display
 var SUBTYPE_GROUPS=[
   {label:"Hydrological", options:["Hydrological Stations"]},
   {label:"Flood", options:["Flood Stations"]},
@@ -490,14 +504,12 @@ var SUBTYPE_GROUPS=[
 var TYPES=["Manual+Automatic","Manual","Automatic"];
 var MEDIUMS=["GSM","Satellite","N/A"];
 
-// D (Discontinued) REMOVED — options are now A, I, F, -
 var S_OPTS=["","A","I","F","-"];
 var S_CLR={A:"#15803d",I:"#dc2626",D:"#7c3aed",F:"#c2410c","-":"#6b7280"};
 var S_BG ={A:"#f0fdf4",I:"#fef2f2",D:"#faf5ff",F:"#fff7ed","-":"#f9fafb"};
 var S_LBL={A:"Active",I:"Inactive",F:"Flooded Away","-":"Unchecked","":"Clear/Empty"};
 
 /* ── DEFAULT STATIONS ── */
-// No default stations — all stations are entered manually via ⚙ Manage Stations
 var DEF_HYDRO=[];
 
 /* ── AUTH ── */
@@ -561,7 +573,7 @@ function getVisibleOffices(){
 function getVisibleSubtypes(){
   if(!AUTH.user||AUTH.user.role==="admin")return SUBTYPES;
   var allowed=AUTH.user.subtypes;
-  if(!allowed||allowed.length===0)return SUBTYPES; // backward-compat: no restriction = all
+  if(!allowed||allowed.length===0)return SUBTYPES;
   return SUBTYPES.filter(function(s){return allowed.indexOf(s)>=0;});
 }
 
@@ -627,7 +639,6 @@ function setStatus(stnId,day,newVal,forMonth){
   if(!S.status[k])S.status[k]={};
   if(!S.status[k][stnId])S.status[k][stnId]={};
   var old=S.status[k][stnId][day]||"";
-  // Confirmation when changing to/from A or I
   if(old&&old!==newVal&&(old==="A"||old==="I"||newVal==="A"||newVal==="I")){
     var oL=S_LBL[old]||old,nL=S_LBL[newVal]||"Clear";
     if(!confirm("⚠  Confirm Status Change\n\n  From: "+oL+"\n  To:   "+nL+"\n\n  Day "+day+" — "+month+"\n\nAre you sure you want to make this change?"))return;
@@ -715,7 +726,6 @@ function lockMonth(){
   var stns=S.stns[SK(S.office,S.subtype)]||[];
   var days=dim(S.month);
 
-  // Check for empty/unchecked days per station
   var missing=[];
   stns.forEach(function(stn){
     var stnSt=curSt[stn.id]||{};
@@ -728,26 +738,22 @@ function lockMonth(){
   });
 
   if(missing.length===0){
-    // All filled — simple confirm then lock
     if(!confirm("🔒 Lock "+S.month+" "+S.year+" for "+S.office+"?\n\nAll entries will be READ-ONLY.\nOnly Admin can unlock."))return;
     lSet(LK(S.office,S.subtype,S.year,S.month),true);
     flash(S.month+" "+S.year+" is now LOCKED 🔒");render();
     return;
   }
 
-  // Build warning modal
   var overlay=document.createElement("div");
   overlay.className="lock-modal-overlay";
 
   var modal=document.createElement("div");
   modal.className="lock-modal";
 
-  // Header
   var hdr=document.createElement("div");hdr.className="lock-modal-hdr";
   hdr.innerHTML='<span class="icon">⚠️</span><div><div class="ttl">Incomplete Entries Detected</div>'+
     '<div class="sub">'+S.month+' '+S.year+' · '+S.office+'</div></div>';
 
-  // Body
   var body=document.createElement("div");body.className="lock-modal-body";
   var intro=document.createElement("div");intro.className="lock-warn-intro";
   intro.innerHTML='<b>'+missing.length+' station'+(missing.length>1?'s have':'has')+' unfilled days</b> in '+
@@ -770,7 +776,6 @@ function lockMonth(){
   });
   tbl.appendChild(tb);body.appendChild(tbl);
 
-  // Footer
   var foot=document.createElement("div");foot.className="lock-modal-foot";
   var note=document.createElement("div");note.className="warn-note";
   note.textContent="⚠ You can go back and fill the missing entries, or lock anyway.";
@@ -791,7 +796,6 @@ function lockMonth(){
   modal.appendChild(hdr);modal.appendChild(body);modal.appendChild(foot);
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
-  // Click outside to cancel
   overlay.addEventListener("click",function(e){if(e.target===overlay)overlay.remove();});
 }
 function unlockMonth(){
@@ -823,7 +827,6 @@ function editStation(id){
   var stns=S.stns[k]||[];
   var stn=stns.find(function(s){return s.id===id;});
   if(!stn)return;
-  // Toggle: clicking edit again closes the row
   var existing=document.getElementById("edit-row-"+id);
   if(existing){existing.remove();return;}
   var allRows=document.querySelectorAll(".stn-list tbody tr");
@@ -907,7 +910,6 @@ function deleteUser(id){
   flash("User deleted");render();
 }
 function resetUserPwd(id){
-  // Build a small inline modal instead of a native prompt()
   var existing=document.getElementById("pwd-reset-modal");
   if(existing)existing.remove();
 
@@ -1052,7 +1054,6 @@ function downloadMonthPDF(month){
   if(S.status[k]===undefined)S.status[k]=lGet(k)||{};
   var days=dim(month);
 
-  // Day-column headers — compact, fixed width
   var dHdrs="";
   for(var d=1;d<=days;d++){
     dHdrs+='<th class="dc">'+d+'</th>';
@@ -1081,7 +1082,6 @@ function downloadMonthPDF(month){
       '<td class="c unc">'+cnt["-"]+'</td></tr>';
   });
 
-  // Totals footer row
   var totRow='<tr class="tot"><td class="c" colspan="3">Daily Total</td>';
   for(var d=1;d<=days;d++){
     var ta=0,ti=0,tf=0,tu=0;
@@ -1142,14 +1142,13 @@ function downloadMonthPDF(month){
     '</div>'+
     '<table>'+
       '<colgroup>'+
-        '<col style="width:18px">'+   // #
-        '<col style="width:44px">'+   // Stn No
-        '<col style="width:130px">'+  // Name (remaining space goes here via table-layout)
-        // day cols set in loop below — each 14px
-        '<col style="width:22px">'+   // A
-        '<col style="width:22px">'+   // I
-        '<col style="width:22px">'+   // F
-        '<col style="width:22px">'+   // -
+        '<col style="width:18px">'+
+        '<col style="width:44px">'+
+        '<col style="width:130px">'+
+        '<col style="width:22px">'+
+        '<col style="width:22px">'+
+        '<col style="width:22px">'+
+        '<col style="width:22px">'+
       '</colgroup>'+
       '<thead><tr>'+
         '<th class="tleft">#</th>'+
@@ -1246,14 +1245,12 @@ function el(tag,attrs,children){
 }
 function txt(s){return document.createTextNode(s);}
 
-// Returns the dynamic "Name / …" column label depending on the active subtype
 function getNameLabel(){
   if(S.subtype==="Snow Stations — AWS")return "Name / AWS Location";
   if(S.subtype==="Snow Stations — Glacier Camera")return "Name / Glacier Camera Location";
   return "Name / River";
 }
 
-// Monthly-remarks storage helpers
 function rmkKey(stnId){return "rls_mrmk_"+sk(S.office)+"_"+sk(S.subtype)+"_"+S.year+"_"+sk(S.month)+"_"+stnId;}
 function getRmk(stnId){return lGet(rmkKey(stnId))||"";}
 function setRmk(stnId,val){
@@ -1262,11 +1259,10 @@ function setRmk(stnId,val){
 }
 
 function pwWrap(inp){
-  /* Wraps a password <input> in a relative container with an eye-toggle button */
   var wrap=document.createElement("div");wrap.className="pw-wrap";
   var btn=document.createElement("button");btn.type="button";btn.className="pw-eye";
   btn.title="Show / hide password";
-  btn.innerHTML="&#128065;"; // 👁
+  btn.innerHTML="&#128065;";
   btn.onclick=function(){
     var show=inp.type==="password";
     inp.type=show?"text":"password";
@@ -1286,13 +1282,11 @@ function mkSel(opts,val,cls,onchange){
   return s;
 }
 
-// Grouped subtype selector — shows optgroups for Snow Stations
 function mkSubtypeSel(val,onchange){
   var s=document.createElement("select");
   s.className="hdr-sel";s.onchange=onchange;
   SUBTYPE_GROUPS.forEach(function(grp){
     if(grp.options.length===1){
-      // Single option — no optgroup needed
       var op=document.createElement("option");
       op.value=grp.options[0];op.textContent=grp.options[0];
       if(grp.options[0]===val)op.selected=true;
@@ -1370,7 +1364,6 @@ function renderUserPanel(app){
   var panel=el("div",{cls:"user-mgmt-panel"});
   panel.appendChild(el("div",{cls:"manage-title"},["👥 User Management — Roles, Offices & Station Type Access"]));
 
-  // Add user form
   var nu=S.newUsr;
   var unI=el("input",{type:"text",placeholder:"Username",value:nu.username,
     oninput:function(){S.newUsr.username=this.value;}});
@@ -1387,7 +1380,6 @@ function renderUserPanel(app){
     (function(off){chk.onchange=function(){S.newUsr.offices[off]=this.checked;};})(o);
     offChecks.appendChild(el("label",[chk,txt(" "+o)]));
   });
-  // Subtype access checkboxes for new user
   var subChecksNew=el("div",{cls:"sub-checks"});
   SUBTYPES.forEach(function(st){
     var isSnow=st.indexOf("Snow")>=0;
@@ -1415,7 +1407,6 @@ function renderUserPanel(app){
     el("button",{cls:"btn-stn-add",onclick:addUser},["+ Add User"])
   ]));
 
-  // Users list
   var tbody=el("tbody");
   users.forEach(function(u){
     var isMe=AUTH.user.id===u.id;
@@ -1430,14 +1421,12 @@ function renderUserPanel(app){
     }else{
       offEdit=el("span",{style:"font-size:11px;color:#64748b;font-style:italic"},["All offices"]);
     }
-    // Subtype access editing
     var subEdit=el("div",{cls:"sub-checks"});
     if(u.role!=="admin"){
       SUBTYPES.forEach(function(st){
         var isSnow=st.indexOf("Snow")>=0;
         var chk=el("input",{type:"checkbox"});
         var userSubs=u.subtypes||[];
-        // backward compat: if subtypes array is empty, treat as all-access
         chk.checked=userSubs.length===0||userSubs.indexOf(st)>=0;
         (function(uid,s,c){c.onchange=function(){updateUserSubtypes(uid,c,s);};})(u.id,st,chk);
         var shortName=st.replace("Snow Stations — ","❄ ").replace("Hydrological Stations","🌊 Hydro");
@@ -1488,7 +1477,6 @@ function buildMonthSection(month,stns){
     el("span",{style:"font-size:10px;opacity:.75"},[d+" days"+(locked?" · 🔒":"")])
   ]));
   var tbl=el("table",{cls:"sum-month"});
-  // Header
   var hr=el("tr");
   hr.appendChild(el("th",{cls:"tleft",style:"width:20px"},["#"]));
   hr.appendChild(el("th",{cls:"tleft",style:"min-width:100px"},["Station"]));
@@ -1497,7 +1485,6 @@ function buildMonthSection(month,stns){
   hr.appendChild(el("th",{style:"color:#f87171"},["I"]));
   hr.appendChild(el("th",{style:"color:#fb923c"},["F"]));
   tbl.appendChild(el("thead",[hr]));
-  // Body
   var tbody=el("tbody");
   stns.forEach(function(stn,idx){
     var stnSt=(S.status[k]&&S.status[k][stn.id])||{};
@@ -1522,7 +1509,6 @@ function buildMonthSection(month,stns){
     tr.appendChild(el("td",{cls:"mcnt",style:"color:#c2410c"},[cnt.F||""]));
     tbody.appendChild(tr);
   });
-  // Footer: day totals
   var fr=el("tr");
   fr.appendChild(el("td",{style:"background:#dce7f0"},[""]));
   fr.appendChild(el("td",{style:"background:#dce7f0;font-weight:bold;padding:2px 6px;font-size:9px;color:#1a3558"},["Day Total"]));
@@ -1547,19 +1533,15 @@ function buildMonthSection(month,stns){
 function renderSummary(app){
   var stns=S.stns[SK(S.office,S.subtype)]||[];
   var wrap=el("div",{cls:"summary-wrap"});
-  // Action bar
   var bar=el("div",{cls:"sum-action-bar"});
   bar.appendChild(el("div",{cls:"sum-info"},[
     txt("Annual summary — "),el("b",[S.office]),txt(" / "),el("b",[S.subtype]),txt(" · "+S.year+" · "+stns.length+" stations")
   ]));
-  // ── CSV dropdown (Annual + Monthly) ──────────────────────────────────────
   (function(){
     var wrap=document.createElement("div");wrap.className="dl-wrap";
     var btn=document.createElement("button");btn.className="btn-dl-drop";
     btn.innerHTML="⬇ CSV ▾";
     var menu=document.createElement("div");menu.className="dl-menu";
-
-    // Annual row
     var secAnnual=document.createElement("div");secAnnual.className="dl-menu-section";
     secAnnual.textContent="Full Year";
     menu.appendChild(secAnnual);
@@ -1569,8 +1551,6 @@ function renderSummary(app){
       '<span class="mi-badge mi-badge-annual">Annual</span>';
     annRow.onclick=function(){downloadSummaryCSV();menu.classList.remove("open");};
     menu.appendChild(annRow);
-
-    // Monthly rows
     var divider=document.createElement("div");divider.className="dl-menu-divider";
     menu.appendChild(divider);
     var secMonth=document.createElement("div");secMonth.className="dl-menu-section";
@@ -1590,7 +1570,6 @@ function renderSummary(app){
       mWrap.appendChild(item);
     });
     menu.appendChild(mWrap);
-
     btn.onclick=function(e){e.stopPropagation();
       document.querySelectorAll(".dl-menu.open").forEach(function(x){x.classList.remove("open");});
       menu.classList.toggle("open");
@@ -1599,14 +1578,11 @@ function renderSummary(app){
     bar.appendChild(wrap);
   })();
 
-  // ── PDF dropdown (Annual + Monthly) ──────────────────────────────────────
   (function(){
     var wrap=document.createElement("div");wrap.className="dl-wrap";
     var btn=document.createElement("button");btn.className="btn-dl-drop red";
     btn.innerHTML="🖨 PDF ▾";
     var menu=document.createElement("div");menu.className="dl-menu";
-
-    // Annual row
     var secAnnual=document.createElement("div");secAnnual.className="dl-menu-section";
     secAnnual.textContent="Full Year";
     menu.appendChild(secAnnual);
@@ -1616,8 +1592,6 @@ function renderSummary(app){
       '<span class="mi-badge mi-badge-annual">Annual</span>';
     annRow.onclick=function(){downloadSummaryPDF();menu.classList.remove("open");};
     menu.appendChild(annRow);
-
-    // Monthly rows
     var divider=document.createElement("div");divider.className="dl-menu-divider";
     menu.appendChild(divider);
     var secMonth=document.createElement("div");secMonth.className="dl-menu-section";
@@ -1637,7 +1611,6 @@ function renderSummary(app){
       mWrap.appendChild(item);
     });
     menu.appendChild(mWrap);
-
     btn.onclick=function(e){e.stopPropagation();
       document.querySelectorAll(".dl-menu.open").forEach(function(x){x.classList.remove("open");});
       menu.classList.toggle("open");
@@ -1646,13 +1619,11 @@ function renderSummary(app){
     bar.appendChild(wrap);
   })();
 
-  // Close any open menu on outside click
   document.addEventListener("click",function(){
     document.querySelectorAll(".dl-menu.open").forEach(function(x){x.classList.remove("open");});
   });
   wrap.appendChild(bar);
   if(stns.length===0){wrap.appendChild(el("div",{cls:"no-data-msg"},["No stations added yet."]));app.appendChild(wrap);return;}
-  // 2-column grid of 12 month sections
   var grid=el("div",{cls:"sum-grid"});
   MONTHS.forEach(function(m){grid.appendChild(buildMonthSection(m,stns));});
   wrap.appendChild(grid);app.appendChild(wrap);
@@ -1693,7 +1664,6 @@ function render(){
       el("div",{cls:"ctrl"},[el("span",{cls:"ctrl-lbl"},["Sub-type:"]),
         (function(){
           var visSub=getVisibleSubtypes();
-          // If current subtype not accessible, reset to first visible
           if(visSub.indexOf(S.subtype)<0)S.subtype=visSub[0]||SUBTYPES[0];
           var s=document.createElement("select");s.className="hdr-sel";
           s.onchange=function(){S.subtype=this.value;render();};
@@ -1733,7 +1703,6 @@ function render(){
     ])
   ];
 
-  // Add/Delete Office panels
   if(S.showAddOff&&isAdmin){
     var offInp=el("input",{type:"text",placeholder:"New office name (e.g. OHM Surkhet)",value:S.newOff,
       oninput:function(){S.newOff=this.value;},
@@ -1756,10 +1725,8 @@ function render(){
   }
   app.appendChild(el("div",{cls:"header"},headerChildren));
 
-  // User management panel
   if(S.showUserMgmt&&isAdmin)renderUserPanel(app);
 
-  // Tabs
   app.appendChild(el("div",{cls:"tabs"},[
     el("button",{cls:"tab"+(S.view==="status"?" active":""),onclick:function(){S.view="status";render();}},["📋 Daily Status"]),
     el("button",{cls:"tab"+(S.view==="summary"?" active":""),onclick:function(){S.view="summary";render();}},["📊 Annual Summary"])
@@ -1840,7 +1807,6 @@ function render(){
     return el("span",{cls:"leg-item"},[el("span",{cls:"leg-code",style:"color:"+S_CLR[p.v]},[p.v]),el("span",{style:"color:#64748b"},[" = "+p.l])]);
   });
   legItems.push(el("span",{cls:"leg-hint"},["Click any day cell → select status from dropdown"]));
-  // If locked, add a small lock tag to the legend bar instead of a big banner
   if(locked){
     var lockTag=el("span",{cls:"lock-tag"},[txt("🔒 "+S.month+" Locked")]);
     if(isAdmin){
@@ -1865,7 +1831,6 @@ function render(){
   sRow.appendChild(el("th",{cls:"dark",style:"min-width:110px"},["Remarks"]));
   thead.appendChild(sRow);
 
-  // Body
   var tbody=el("tbody");
   if(stns.length===0){
     var noTd=el("td",{cls:"no-stn"},["No stations for "+S.office+" / "+S.subtype+". Open ⚙ Manage Stations to add them."]);
@@ -1882,7 +1847,6 @@ function render(){
       tr.appendChild(el("td",{style:"text-align:center;font-size:10px;color:#64748b;padding:3px 4px;border-right:1px solid #e2e8f0"},[stn.elev||""]));
       tr.appendChild(el("td",{style:"text-align:center;font-size:10px;color:#64748b;padding:3px 4px;border-right:1px solid #e2e8f0"},[stn.type]));
       tr.appendChild(el("td",{style:"text-align:center;font-size:10px;padding:3px 4px;border-right:1px solid #e2e8f0"},[stn.medium]));
-      // Day columns
       for(var d=1;d<=31;d++){
         (function(day){
           var v=stnSt[day]||"",active=day<=days;
@@ -1900,7 +1864,6 @@ function render(){
       }
       tr.appendChild(el("td",{cls:"active-days"},[stats.A?String(stats.A):""]));
       tr.appendChild(el("td",{cls:"inactive-days"},[stats.I?String(stats.I):""]));
-      // Remarks cell
       (function(sid){
         var rmkTd=el("td",{cls:"remarks-cell"});
         var rmkInp=document.createElement("input");
@@ -1918,7 +1881,6 @@ function render(){
     });
   }
 
-  // Footer totals
   var tfoot=el("tfoot");
   if(stns.length>0){
     var fRows=[["Active (A)","#15803d","A"],["Inactive (I)","#dc2626","I"],["Flooded Away (F)","#c2410c","F"],["Unchecked (-)","#6b7280","-"],["Total","#1a3558","total"]];
@@ -1966,6 +1928,7 @@ if(checkSession()){
 </script>
 </body>
 </html>
+
 
 
 

@@ -389,90 +389,99 @@ table.sum-month tfoot td{background:#dce7f0;border-top:1px solid #b0c4d8;
 }
 </style>
 
-<!-- ═══════════════════════════════════════════
-     GOOGLE SHEETS BACKEND
-═══════════════════════════════════════════ -->
 <script>
-var GS_URL="https://script.google.com/macros/s/AKfycbwRW9euFRs7xUtoxJqpqRjeqAjjPZVPrSsp9qT4kQVeXIn3_tI81QZvI91QklI1ZHKeqw/exec";
-var _saveTimer=null,_lastSaved=null;
+var SB_URL = "https://hmnsnvrgaksvjzmvasrl.supabase.co";
+var SB_KEY = "sb_publishable_VMREBL29jk3WCJWhTxpcZw_GTd9F5rV";
+var SB_KV  = SB_URL + "/rest/v1/kv";
+var SB_HEADERS = {
+  "apikey": SB_KEY,
+  "Authorization": "Bearer " + SB_KEY,
+  "Content-Type": "application/json"
+};
 
-function setSyncStatus(type,msg){
-  var bar=document.getElementById("sync-bar");
-  if(!bar)return;
-  var cls={ok:"sync-ok",save:"sync-save",err:"sync-err",init:"sync-init"}[type]||"sync-init";
-  bar.innerHTML='<span class="sync-pill '+cls+'"><span class="sync-dot"></span> '+msg+'</span>';
+var _saveTimer = null, _lastSaved = null;
+
+function setSyncStatus(type, msg) {
+  var bar = document.getElementById("sync-bar");
+  if (!bar) return;
+  var cls = { ok: "sync-ok", save: "sync-save", err: "sync-err", init: "sync-init" }[type] || "sync-init";
+  bar.innerHTML = '<span class="sync-pill ' + cls + '"><span class="sync-dot"></span> ' + msg + '</span>';
 }
 
-function gsLoad(cb){
-  setSyncStatus("init","Loading data…");
+// Load: pull every row from kv, write into localStorage (except protected keys).
+function gsLoad(cb) {
+  setSyncStatus("init", "Loading data…");
 
-  // ── FIX: Expanded protected keys — local data ALWAYS wins for these ──────
-  // rls_users    : user accounts & office assignments
-  // rls_offices  : office list
-  // rls_year     : currently selected year
-  // All rls_st_* : station status grids  (the data you enter daily)
-  // All rls_stn_*: station definitions
-  // All rls_lock_*: month lock flags
-  // All rls_mrmk_*: monthly remarks
-  // These are seeded from the sheet ONLY when they don't exist locally yet.
-  var ALWAYS_PROTECTED=["rls_users","rls_offices","rls_year"];
+  // Protect rls_users: accounts/office assignments are local-authoritative.
+  var PROTECTED = ["rls_users"];
+  var localSnap = {};
+  PROTECTED.forEach(function (k) { try { var v = localStorage.getItem(k); if (v) localSnap[k] = v; } catch (e) {} });
 
-  fetch(GS_URL,{method:"GET"})
-  .then(function(r){return r.json();})
-  .then(function(data){
-    if(data&&typeof data==="object"){
-      Object.keys(data).forEach(function(k){
-        // 1. Skip the always-protected keys entirely if they exist locally
-        if(ALWAYS_PROTECTED.indexOf(k)>=0){
-          if(localStorage.getItem(k)!==null)return; // local wins
-          // Seed from sheet only if nothing local yet
-          try{localStorage.setItem(k,JSON.stringify(data[k]));}catch(e){}
-          return;
-        }
-        // 2. For ALL other rls_ keys (status, stations, locks, remarks):
-        //    NEVER overwrite existing local data — only seed if missing
-        if(localStorage.getItem(k)!==null)return; // local wins
-        try{localStorage.setItem(k,JSON.stringify(data[k]));}catch(e){}
-      });
-      setSyncStatus("ok","Loaded ✓");
-    }
-    if(cb)cb(true);
-  })
-  .catch(function(){setSyncStatus("err","Load failed — using local data");if(cb)cb(false);});
+  fetch(SB_KV + "?select=key,value", { method: "GET", headers: SB_HEADERS })
+    .then(function (r) { return r.json(); })
+    .then(function (rows) {
+      if (Array.isArray(rows)) {
+        rows.forEach(function (row) {
+          var k = row.key;
+          if (PROTECTED.indexOf(k) >= 0) return; // skip — local wins
+          try { localStorage.setItem(k, JSON.stringify(row.value)); } catch (e) {}
+        });
+        // Restore protected keys from snapshot; seed from server only if nothing local
+        PROTECTED.forEach(function (k) {
+          if (localSnap[k]) { try { localStorage.setItem(k, localSnap[k]); } catch (e) {} }
+          else {
+            var found = rows.find(function (r) { return r.key === k; });
+            if (found !== undefined && found) { try { localStorage.setItem(k, JSON.stringify(found.value)); } catch (e) {} }
+          }
+        });
+        setSyncStatus("ok", "Loaded ✓");
+      }
+      if (cb) cb(true);
+    })
+    .catch(function () { setSyncStatus("err", "Load failed — using local data"); if (cb) cb(false); });
 }
 
-function gsSave(){
-  var payload={};
-  for(var i=0;i<localStorage.length;i++){
-    var k=localStorage.key(i);
-    if(k&&k.indexOf("rls")===0){
-      try{payload[k]=JSON.parse(localStorage.getItem(k));}catch(e){payload[k]=localStorage.getItem(k);}
+// Save: upsert every rls* localStorage key as its own row in kv.
+function gsSave() {
+  var rows = [];
+  for (var i = 0; i < localStorage.length; i++) {
+    var k = localStorage.key(i);
+    if (k && k.indexOf("rls") === 0) {
+      var val;
+      try { val = JSON.parse(localStorage.getItem(k)); } catch (e) { val = localStorage.getItem(k); }
+      rows.push({ key: k, value: val, updated_at: new Date().toISOString() });
     }
   }
-  var json=JSON.stringify(payload);
-  // ── FIX: Always attempt save; only skip if nothing at all has changed ────
-  // Reset _lastSaved when page loads so first save always goes through
-  if(json===_lastSaved)return;
-  _lastSaved=json;
-  setSyncStatus("save","Saving…");
-  fetch(GS_URL,{method:"POST",body:json})
-  .then(function(r){return r.text();})
-  .then(function(){setSyncStatus("ok","Saved to Google Sheet ✓");})
-  .catch(function(){setSyncStatus("err","Save failed — check connection");});
+  var json = JSON.stringify(rows);
+  if (json === _lastSaved) return;
+  _lastSaved = json;
+  setSyncStatus("save", "Saving…");
+
+  // Upsert (on_conflict=key). Prefer header merges duplicates by primary key.
+  fetch(SB_KV + "?on_conflict=key", {
+    method: "POST",
+    headers: Object.assign({}, SB_HEADERS, { "Prefer": "resolution=merge-duplicates" }),
+    body: json
+  })
+    .then(function (r) { if (!r.ok) throw new Error(); return r.text(); })
+    .then(function () { setSyncStatus("ok", "Saved to Supabase ✓"); })
+    .catch(function () { setSyncStatus("err", "Save failed — check connection"); });
 }
 
-function scheduleSave(){
-  if(_saveTimer)clearTimeout(_saveTimer);
-  _saveTimer=setTimeout(gsSave,1500);
+function scheduleSave() {
+  if (_saveTimer) clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(gsSave, 1500);
 }
 
-function startAutoRefresh(){
-  setInterval(function(){
-    if(document.hidden)return;
-    // ── FIX: Auto-refresh no longer overwrites local data (gsLoad fixed above)
-    gsLoad(function(ok){if(ok&&window._appRender)window._appRender();});
-  },30000);
+function startAutoRefresh() {
+  setInterval(function () {
+    if (document.hidden) return;
+    gsLoad(function (ok) { if (ok && window._appRender) window._appRender(); });
+  }, 30000);
 }
+</script>
+
+
 </script>
 </head>
 <body>

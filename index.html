@@ -1894,7 +1894,7 @@ function render(){
       var tr=el("tr");
       tr.appendChild(el("td",{style:"text-align:center;color:#94a3b8;padding:3px 4px;border-right:1px solid #e2e8f0"},[String(i+1)]));
       tr.appendChild(el("td",{style:"text-align:center;font-family:monospace;padding:3px 4px;border-right:1px solid #e2e8f0"},[stn.no]));
-      tr.appendChild(el("td",{style:"text-align:left;padding-left:8px;border-right:1px solid #e2e8f0;overflow:hidden;white-space:nowrap;max-width:168px"},[stn.name]));
+      tr.appendChild(el("td",{style:"text-align:left;padding-left:8px;border-right:1px solid #e2e8f0;white-space:nowrap;min-width:240px",title:stn.name},[stn.name]));
       tr.appendChild(el("td",{style:"text-align:center;font-size:10px;color:#64748b;padding:3px 4px;border-right:1px solid #e2e8f0"},[stn.elev||""]));
       tr.appendChild(el("td",{style:"text-align:center;font-size:10px;color:#64748b;padding:3px 4px;border-right:1px solid #e2e8f0"},[stn.type]));
       tr.appendChild(el("td",{style:"text-align:center;font-size:10px;padding:3px 4px;border-right:1px solid #e2e8f0"},[stn.medium]));
@@ -1951,9 +1951,9 @@ function render(){
   }
 
   var tbl=el("table",{cls:"status"});
-  tbl.style.minWidth=(493+days*26+110)+"px";
+  tbl.style.minWidth=(565+days*26+110)+"px";
   var cg=el("colgroup");
-  [32,58,168,60,120,55].forEach(function(w){var c=el("col");c.style.width=w+"px";cg.appendChild(c);});
+  [32,58,240,60,120,55].forEach(function(w){var c=el("col");c.style.width=w+"px";cg.appendChild(c);});
   for(var ci=0;ci<31;ci++){var c=el("col");c.style.width="26px";cg.appendChild(c);}
   [46,46,110].forEach(function(w){var c=el("col");c.style.width=w+"px";cg.appendChild(c);});
   tbl.appendChild(cg);tbl.appendChild(thead);tbl.appendChild(tbody);tbl.appendChild(tfoot);

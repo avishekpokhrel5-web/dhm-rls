@@ -74,6 +74,14 @@ select,input,button{font-family:inherit}
   border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.1);
   color:#fff;cursor:pointer;white-space:nowrap}
 .manage-btn:hover,.manage-btn.active{background:rgba(255,255,255,.22)}
+.quick-links{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:9px;
+  padding-top:9px;border-top:1px solid rgba(255,255,255,.12)}
+.quick-links .ql-lbl{font-size:10px;opacity:.6;text-transform:uppercase;
+  letter-spacing:.05em;margin-right:2px}
+.ql{font-size:11px;padding:3px 11px;border-radius:14px;text-decoration:none;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);
+  color:#dbeafe;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.ql:hover{background:rgba(96,165,250,.3);color:#fff;border-color:rgba(96,165,250,.5)}
 .user-pill{font-size:11px;padding:3px 10px;border-radius:20px;
   background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
   color:rgba(255,255,255,.85);display:flex;align-items:center;gap:5px}
@@ -1753,6 +1761,18 @@ function render(){
       ])
     ])
   ];
+
+  // Quick links bar — official DHM resources
+  headerChildren.push(el("div",{cls:"quick-links"},[
+    el("span",{cls:"ql-lbl"},["🔗 Links:"]),
+    el("a",{cls:"ql",href:"https://www.dhm.gov.np/",target:"_blank",rel:"noopener"},["🌐 DHM"]),
+    el("a",{cls:"ql",href:"https://hydrology.gov.np/",target:"_blank",rel:"noopener"},["💧 Hydrology"]),
+    el("a",{cls:"ql",href:"https://www.dhm.gov.np/hydrology/river-watch",target:"_blank",rel:"noopener"},["🌊 River Watch"]),
+    el("a",{cls:"ql",href:"https://www.dhm.gov.np/hydrology/rainfall-watch",target:"_blank",rel:"noopener"},["🌧️ Rainfall Watch"]),
+    el("a",{cls:"ql",href:"https://dhm.gov.np/hydrology/floodMonitoring",target:"_blank",rel:"noopener"},["⚠️ Flood Monitoring"]),
+    el("a",{cls:"ql",href:"https://dhm.gov.np/hydrology/realtime-stream",target:"_blank",rel:"noopener"},["📈 Real-Time Stream Flow"]),
+    el("a",{cls:"ql",href:"https://daq.hydrology.gov.np/#/monitoring/map?_k=grsfe8",target:"_blank",rel:"noopener"},["🗺️ DAQ Monitoring Map"])
+  ]));
 
   if(S.showAddOff&&isAdmin){
     var offInp=el("input",{type:"text",placeholder:"New office name (e.g. OHM Surkhet)",value:S.newOff,

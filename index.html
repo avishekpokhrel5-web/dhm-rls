@@ -134,7 +134,7 @@ select,input,button{font-family:inherit}
 .fld label{font-size:10px;color:#64748b}
 .fld input,.fld select{font-size:12px;padding:5px 8px;border-radius:4px;
   border:1px solid #d1d5db;background:#fff;color:#000;outline:none}
-.fld-grow{flex:1;min-width:340px}
+.fld-grow{flex:1;min-width:180px}
 .fld-grow input{width:100%}
 .btn-stn-add{padding:6px 14px;background:#1a3558;color:#fff;border:none;
   border-radius:4px;font-size:12px;cursor:pointer;font-weight:bold;
@@ -849,7 +849,7 @@ function editStation(id){
   editRow.className="edit-row";
   var td=document.createElement("td");td.setAttribute("colspan","7");
   var noI=document.createElement("input");noI.value=stn.no;noI.placeholder="Stn No.";noI.style.width="70px";
-  var nameI=document.createElement("input");nameI.value=stn.name;nameI.placeholder=getNameLabel();nameI.style.width="360px";
+  var nameI=document.createElement("input");nameI.value=stn.name;nameI.placeholder=getNameLabel();nameI.style.width="180px";
   var elevI=document.createElement("input");elevI.value=stn.elev||"";elevI.placeholder="Elev (m)";elevI.style.width="70px";
   var typeSel2=document.createElement("select");
   TYPES2.forEach(function(t){var o=document.createElement("option");o.value=t;o.textContent=t;if(t===stn.type)o.selected=true;typeSel2.appendChild(o);});
@@ -918,50 +918,7 @@ function deleteUser(id){
   saveUsers(getUsers().filter(function(u){return u.id!==id;}));
   flash("User deleted");render();
 }
-function resetUserPwd(id){function changeOwnPassword(){
-  var ov=document.createElement("div");
-  ov.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10000;display:flex;align-items:center;justify-content:center;";
-  var box=document.createElement("div");
-  box.style.cssText="background:#fff;border-radius:10px;padding:24px 28px;width:340px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,.25);";
-  var title=document.createElement("div");
-  title.style.cssText="font-weight:bold;font-size:14px;color:#1a3558;margin-bottom:4px;";
-  title.textContent="Change My Password";
-  var sub=document.createElement("div");
-  sub.style.cssText="font-size:12px;color:#64748b;margin-bottom:16px;";
-  sub.textContent="Logged in as: "+AUTH.user.username;
-  var l1=document.createElement("label");
-  l1.style.cssText="display:block;font-size:11px;font-weight:bold;color:#475569;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;";
-  l1.textContent="Current Password";
-  var cur=document.createElement("input");cur.type="password";cur.placeholder="Enter current password";
-  cur.style.cssText="font-size:13px;padding:9px 12px;border:1.5px solid #d1d5db;border-radius:6px;outline:none;width:100%;margin-bottom:14px;";
-  var l2=document.createElement("label");
-  l2.style.cssText="display:block;font-size:11px;font-weight:bold;color:#475569;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;";
-  l2.textContent="New Password";
-  var np=document.createElement("input");np.type="password";np.placeholder="Enter new password";
-  np.style.cssText="font-size:13px;padding:9px 12px;border:1.5px solid #d1d5db;border-radius:6px;outline:none;width:100%;margin-bottom:16px;";
-  var row=document.createElement("div");row.style.cssText="display:flex;gap:8px;justify-content:flex-end;";
-  var cb=document.createElement("button");cb.textContent="Cancel";
-  cb.style.cssText="padding:8px 16px;background:#f1f5f9;color:#374151;border:1px solid #d1d5db;border-radius:6px;font-size:13px;cursor:pointer;";
-  cb.onclick=function(){ov.remove();};
-  var sb=document.createElement("button");sb.textContent="Save Password";
-  sb.style.cssText="padding:8px 16px;background:#1a3558;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:bold;cursor:pointer;";
-  sb.onclick=function(){
-    var users=getUsers();
-    var me=users.find(function(x){return x.id===AUTH.user.id;});
-    if(!me){ov.remove();return;}
-    if(me.pwd!==hashPwd(cur.value)){cur.style.borderColor="#dc2626";cur.focus();flash("Current password is incorrect",true);return;}
-    if(!np.value.trim()){np.style.borderColor="#dc2626";np.focus();return;}
-    me.pwd=hashPwd(np.value.trim());saveUsers(users);
-    flash("Your password has been changed ✓");ov.remove();
-  };
-  np.addEventListener("keydown",function(e){if(e.key==="Enter")sb.click();if(e.key==="Escape")ov.remove();});
-  cur.addEventListener("keydown",function(e){if(e.key==="Escape")ov.remove();});
-  ov.addEventListener("click",function(e){if(e.target===ov)ov.remove();});
-  row.appendChild(cb);row.appendChild(sb);
-  box.appendChild(title);box.appendChild(sub);box.appendChild(l1);box.appendChild(cur);box.appendChild(l2);box.appendChild(np);box.appendChild(row);
-  ov.appendChild(box);document.body.appendChild(ov);
-  setTimeout(function(){cur.focus();},40);
-}
+function resetUserPwd(id){
   var existing=document.getElementById("pwd-reset-modal");
   if(existing)existing.remove();
 
@@ -1750,8 +1707,6 @@ function render(){
       el("div",{cls:"user-pill"},[
         txt("👤 "+AUTH.user.username),
         el("span",{style:"font-size:9px;opacity:.65;margin-left:2px"},[" · "+(AUTH.user.role==="admin"?"Admin":"Data Entry")]),
-        ),
-        el("button",{cls:"logout-btn",style:"background:rgba(96,165,250,.2);color:#bfdbfe;border-color:rgba(96,165,250,.4)",onclick:changeOwnPassword},["🔑 Password"]),
         el("button",{cls:"logout-btn",onclick:doLogout},["Sign Out"])
       ])
     ])
